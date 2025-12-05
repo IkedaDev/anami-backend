@@ -1,10 +1,12 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
+import "dotenv/config";
 import { logger } from "hono/logger";
 import { Scalar } from "@scalar/hono-api-reference";
 import v1 from "./routes/v1";
 
 const app = new OpenAPIHono();
+const publicPath = process.env.API_PUBLIC_PATH || "";
 
 app.use(
   "/*",
@@ -33,13 +35,19 @@ app.doc("/doc", {
     title: "Anami Masoterapia API",
     description: "Backend profesional para gestión de citas",
   },
+  servers: [
+    {
+      url: `${publicPath}`, // Esto le dice a Scalar: "Todas las peticiones empiezan con /anami"
+      description: "Servidor Principal",
+    },
+  ],
 });
 
 app.get(
   "/reference",
   Scalar({
     theme: "purple",
-    spec: { url: "/doc" },
+    spec: { url: `${publicPath}/doc` },
   } as any)
 );
 
