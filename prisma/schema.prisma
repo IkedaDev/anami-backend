@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --------------------------------------------------------
+// ENUMS: Para estandarizar valores fijos encontrados en appointments.txt
+// --------------------------------------------------------
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum AppointmentStatus {
+  SCHEDULED // Agendado
+  COMPLETED // Realizado
+  CANCELLED // Cancelado
+  NO_SHOW   // No se presentó
+}
+
+// Basado en "serviceMode": "hotel" | "particular" 
+enum LocationType {
+  HOTEL
+  PARTICULAR
+  STUDIO    // Por si a futuro tienes local propio
+}
+
+// --------------------------------------------------------
+// MODELOS
+// --------------------------------------------------------
+
+// Usuario del Sistema (Tú, Anami, Recepcionista)
+// No confundir con los clientes que reciben el masaje.
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // Hashed
+  fullName  String   @map("full_name")
+  role      Role     @default(USER)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+// El "Patient" o Cliente 
+model Client {
+  // Usamos String en ID para facilitar la migración de los IDs de Firebase
+  // Ejemplo: "0vic6sjo1lhksxadts6462"
+  id        String   @id @default(uuid())
+  
+  fullName  String   @map("full_name") // "Juan alfaro", "Omar Lara"
+  email     String?  @unique           // Puede ser nulo si no lo tienes
+  phone     String?                    // "+569..."
+  address   String?                    // "Newen Antu 962..."
+  rut       String?  @unique           // "19158143-1"
+  
+  // Notas internas sobre el cliente (alergias, preferencias)
+  notes     String?  @db.Text
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  appointments Appointment[]
+
+  @@map("clients")
+}
+
+// Catálogo de Servicios (Masaje Mixto, Descontracturante, etc.)
+// Extraído de "selectedServiceIds" 
+model Service {
+  id          String  @id @default(uuid())
+  name        String  // "Masaje Mixto", "Drenaje"
+  description String?
+  
+  // Precio base sugerido (CLP)
+  basePrice   Int     @map("base_price") 
+  
+  // Duración estándar en minutos
+  durationMin Int     @default(50) @map("duration_min")
+  
+  isActive    Boolean @default(true) @map("is_active")
+
+  appointmentItems AppointmentItem[]
+
+  @@map("services")
+}
+
+// La Cita / Agenda 
+model Appointment {
+  id String @id @default(uuid())
+
+  // Relación con Cliente
+  clientId String @map("client_id")
+  client   Client @relation(fields: [clientId], references: [id])
+
+  // Fechas y Tiempos (Usamos DateTime nativo, no strings)
+  // scheduledStart 
+  startsAt DateTime @map("starts_at") 
+  // scheduledEnd 
+  endsAt   DateTime @map("ends_at")   
+  
+  // Duración real en minutos (ej: 50, 40)
+  durationMinutes Int @map("duration_minutes")
+
+  status AppointmentStatus @default(SCHEDULED)
+
+  // Datos Financieros (Integers para CLP, sin decimales)
+  totalPrice Int @map("total_price") // "total": 30000
+  anamiShare Int @map("anami_share") // "anamiShare": 18000
+  hotelShare Int @map("hotel_share") // "hotelShare": 12000
+
+  // Detalles del Servicio
+  locationType LocationType @map("location_type") // "serviceMode"
+  
+  // Campos específicos encontrados en tu data 
+  hasNailCut  Boolean @default(false) @map("has_nail_cut")
+  facialType  String? @map("facial_type") // "no", o el tipo de facial
+  
+  // Relación Muchos a Muchos (Una cita puede tener varios servicios)
+  items AppointmentItem[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("appointments")
+  @@index([startsAt]) // Para buscar rápido por fecha en el calendario
+  @@index([clientId])
+}
+
+// Tabla Intermedia: Rompe la relación muchos-a-muchos
+// Permite guardar el precio histórico del servicio en el momento de la cita
+model AppointmentItem {
+  id String @id @default(uuid())
+
+  appointmentId String      @map("appointment_id")
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  serviceId String  @map("service_id")
+  service   Service @relation(fields: [serviceId], references: [id])
+
+  // Guardamos el precio al momento de la venta (por si subes precios el próximo año)
+  priceAtTime Int @map("price_at_time")
+
+  @@map("appointment_items")
+}
