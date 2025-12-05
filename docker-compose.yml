@@ -6,11 +6,10 @@ services:
     container_name: anami_backend
     restart: always
     ports:
-      - "4000:3000" # Exponemos el 4000 externo -> 3000 interno
+      - "4001:3000" # Exponemos el 4000 externo -> 3000 interno
     environment:
       # Conexión a la red interna (nombres de contenedores)
       DATABASE_URL: "postgresql://anami:pass@postgres_core_server:5432/anami_masoterapia"
-      MONGO_URL: "mongodb://root:pass@mongo_core_server:27017/admin"
       NODE_ENV: "production"
     networks:
       - infra_network

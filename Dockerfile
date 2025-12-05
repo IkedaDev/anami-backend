@@ -1,42 +1,35 @@
-# --- ETAPA 1: Construcción (Builder) ---
-FROM node:20-alpine AS builder
+# --- ETAPA 1: Dependencias ---
+FROM node:20-alpine AS deps
 
 WORKDIR /app
 
-# 1. Copiamos archivos de dependencias
+# Copiamos archivos de configuración
 COPY package.json yarn.lock ./
 COPY prisma ./prisma/
 
-# 2. Instalamos dependencias
+# Instalamos TODAS las dependencias (incluyendo devDependencies para tener 'tsx' y 'prisma')
 RUN yarn install --frozen-lockfile
 
-# 3. Generamos el cliente de Prisma (CRUCIAL para que funcione)
+# Generamos el cliente de Prisma
 RUN yarn prisma generate
 
-# 4. Copiamos el código fuente
-COPY . .
-
-# 5. Compilamos TypeScript a JavaScript (carpeta dist)
-RUN yarn build
-
-# --- ETAPA 2: Producción (Runner) ---
+# --- ETAPA 2: Runner (Producción) ---
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Copiamos solo lo necesario desde el builder
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./package.json
-# Necesitamos el schema y config para que Prisma funcione en producción (especialmente en v7)
-COPY --from=builder /app/prisma ./prisma
+# Copiamos las dependencias instaladas desde la etapa anterior
+COPY --from=deps /app/node_modules ./node_modules
+# Copiamos el código fuente
+COPY . .
 
-# Variables de entorno por defecto
+# Variables de entorno
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Exponemos el puerto interno
 EXPOSE 3000
 
-# Comando de arranque
-CMD ["node", "dist/index.js"]
+# EL TRUCO ELEGANTE:
+# Ejecutamos directamente el archivo TS usando 'tsx'.
+# No hace falta compilación previa a JS.
+CMD ["npx", "tsx", "src/index.ts"]
