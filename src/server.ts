@@ -4,6 +4,7 @@ import "dotenv/config";
 import { logger } from "hono/logger";
 import { Scalar } from "@scalar/hono-api-reference";
 import v1 from "./routes/v1";
+import { httpLogger } from "./middlewares/http-logger.middleware";
 
 const app = new OpenAPIHono();
 const publicPath = process.env.API_PUBLIC_PATH || "";
@@ -21,6 +22,7 @@ app.use(
 );
 
 app.use(logger());
+app.use("/*", httpLogger);
 
 // --- RUTAS ---
 // Montamos todo el router v1 bajo el prefijo "/v1"

@@ -67,6 +67,8 @@ jobs:
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
               -e API_PUBLIC_PATH="/anami" \
               -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+              -e LOGGER_SERVICE_URL="http://ikedadev_logger:4002/v1/ingest" \
+              -e LOGGER_API_KEY="${{ secrets.LOGGER_API_KEY }}" \
               ikedaharket/anami-backend:latest
 
             # Limpiar imágenes viejas
