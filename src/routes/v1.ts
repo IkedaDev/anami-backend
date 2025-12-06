@@ -1,4 +1,5 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
+import { ApiResponse } from "../core/api-response";
 
 // Importamos todos tus módulos
 import {
@@ -25,7 +26,18 @@ import {
 } from "../middlewares/rate-limit.middleware";
 
 // Creamos una "mini-app" solo para la versión 1
-const v1 = new OpenAPIHono();
+const v1 = new OpenAPIHono({
+  defaultHook: (result, c) => {
+    if (!result.success) {
+      return ApiResponse.error(
+        c,
+        "Error de Validación (Datos inválidos)",
+        result.error,
+        400
+      );
+    }
+  },
+});
 
 // --- REGISTRO DE RUTAS V1 ---
 
@@ -39,6 +51,7 @@ v1.openapi(authRoutes.login, authHandlers.login);
 
 v1.openapi(serviceRoutes.list, serviceHandlers.list);
 v1.openapi(appointmentRoutes.list, appointmentHandlers.list);
+v1.openapi(appointmentRoutes.availability, appointmentHandlers.availability);
 
 v1.use("/*", protect);
 

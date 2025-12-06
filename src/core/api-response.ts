@@ -2,7 +2,6 @@ import { Context } from "hono";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { PaginationMeta } from "./pagination";
 
-// Interfaz Base (Meta opcional)
 interface IApiResponse<T> {
   success: boolean;
   message: string;
@@ -51,13 +50,20 @@ export class ApiResponse {
     );
   }
 
-  // Método error
   static error<S extends ContentfulStatusCode = 400>(
     c: Context,
     message: string,
     errors: any = null,
     status: S = 400 as S
   ) {
+    // 1. GUARDAR DETALLES PARA EL LOGGER
+    // Esto no se envía al usuario, se queda en memoria para el middleware
+    c.set("failureDetails", {
+      errorMessage: message,
+      errorTrace: errors, // Aquí va el ZodError o el Stack Trace
+      status: status,
+    });
+
     return c.json(
       {
         success: false,

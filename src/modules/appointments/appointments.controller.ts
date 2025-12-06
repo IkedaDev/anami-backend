@@ -69,4 +69,13 @@ export class AppointmentsController {
       return ApiResponse.error(c, "Error al cancelar la cita", error, 500);
     }
   };
+
+  getAvailability = async (c: Context) => {
+    // Validamos query params
+    const query = await c.req.valid("query" as never);
+    const { date, durationMinutes } = query;
+
+    const result = await this.service.getAvailability(date, durationMinutes);
+    return ApiResponse.success(c, result);
+  };
 }

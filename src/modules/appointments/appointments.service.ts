@@ -37,48 +37,78 @@ export class AppointmentsService {
     }
   }
 
-  // --- REGLA DE NEGOCIO: Crear Cita ---
-  async create(data: CreateAppointmentDTO) {
-    // 1. Obtener los servicios para saber precios y duración
-    const services = await prisma.service.findMany({
-      where: { id: { in: data.serviceIds }, isActive: true },
-    });
-
-    if (services.length !== data.serviceIds.length) {
+  async create(data: any) {
+    // 1. Validaciones previas para Particular
+    if (
+      data.locationType === "PARTICULAR" &&
+      (!data.serviceIds || data.serviceIds.length === 0)
+    ) {
       throw new HTTPException(400, {
-        message: "Uno o más servicios seleccionados no son válidos.",
+        message: "Debe seleccionar servicios para citas particulares.",
       });
     }
 
-    // 2. Calcular Duración Total y Precio Total
-    const durationMinutes = services.reduce(
-      (acc, curr) => acc + curr.durationMin,
-      0
-    );
-    const totalPrice = services.reduce((acc, curr) => acc + curr.basePrice, 0);
+    let services: any[] = [];
+    let durationMinutes = 0;
+    let totalPrice = 0;
+
+    // Variables auxiliares para el cálculo del split financiero
+    let massagePrice = 0;
+    // let nailsPrice = 0; // No la necesitamos explícita para el split, pero sí para el total
+
+    // --- CÁLCULO DE PRECIOS Y DURACIÓN ---
+
+    if (data.locationType === "PARTICULAR") {
+      // A. Lógica Particular: Sumar servicios de la DB
+      services = await prisma.service.findMany({
+        where: { id: { in: data.serviceIds }, isActive: true },
+      });
+
+      if (services.length !== data.serviceIds.length) {
+        throw new HTTPException(400, { message: "Servicios inválidos" });
+      }
+
+      durationMinutes = services.reduce(
+        (acc, curr) => acc + curr.durationMin,
+        0
+      );
+      totalPrice = services.reduce((acc, curr) => acc + curr.basePrice, 0);
+    } else {
+      // B. Lógica Hotel: Cálculo manual (Sin facial)
+      const HOTEL_PRICES = {
+        massage: { 20: 10000, 40: 20000 },
+        nails: { yes: 5000, no: 0 },
+      };
+
+      const duration = data.durationMinutes || 20;
+
+      massagePrice = (HOTEL_PRICES.massage as any)[duration] || 0;
+      const nailsPrice = data.hasNailCut ? HOTEL_PRICES.nails.yes : 0;
+
+      totalPrice = massagePrice + nailsPrice;
+
+      // Duración: Base + 10 min si hay uñas
+      durationMinutes = duration + (data.hasNailCut ? 10 : 0);
+    }
 
     // 3. Calcular Fechas
     const startDate = new Date(data.startsAt);
-    const endDate = new Date(startDate.getTime() + durationMinutes * 60000); // Sumar minutos
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
 
-    // 4. Validar Disponibilidad (Bloqueante)
+    // 4. Validar Disponibilidad
     await this.checkAvailability(startDate, endDate);
 
     // 5. Calcular Repartición (Splits)
-    // Regla: Si es Hotel, quizás el hotel se lleva un %, o es fijo.
-    // Por ahora replicaremos la lógica de tu seed:
-    // Si es Hotel, asumimos una regla simple (ej: 60/40) o fija.
-    // ADAPTACIÓN: Usaré una lógica base, tú puedes ajustarla:
     let hotelShare = 0;
     let anamiShare = totalPrice;
 
     if (data.locationType === LocationType.HOTEL) {
-      // EJEMPLO DE REGLA: El hotel cobra 40% (ajusta esto según tu negocio real)
-      hotelShare = Math.round(totalPrice * 0.4);
+      // REGLA: El hotel gana 40% SOLO del masaje. Las uñas son 100% de Anami.
+      hotelShare = Math.round(massagePrice * 0.4);
       anamiShare = totalPrice - hotelShare;
     }
 
-    // 6. Guardar en Base de Datos (Transacción implícita)
+    // 6. Guardar en Base de Datos
     return await prisma.appointment.create({
       data: {
         clientId: data.clientId,
@@ -88,16 +118,20 @@ export class AppointmentsService {
         locationType: data.locationType,
         status: AppointmentStatus.SCHEDULED,
 
-        // Datos financieros calculados
+        // Financiero
         totalPrice,
         anamiShare,
         hotelShare,
 
-        // Relación con los servicios (Item de venta)
+        // Flags
+        hasNailCut: data.hasNailCut || false,
+        facialType: null, // Eliminado de la lógica, se guarda como null
+
+        // Relación con servicios (Solo si existen, ej: Particular)
         items: {
           create: services.map((s) => ({
             serviceId: s.id,
-            priceAtTime: s.basePrice, // Congelamos el precio
+            priceAtTime: s.basePrice,
           })),
         },
       },
@@ -141,100 +175,126 @@ export class AppointmentsService {
     return paginate(appointments, total, page, limit);
   }
 
-  async update(id: string, data: z.infer<typeof updateAppointmentSchema>) {
-    // 1. Obtener la cita actual para tener sus datos base
-    const currentAppointment = await prisma.appointment.findUnique({
+  async update(id: string, data: any) {
+    const currentAppt = await prisma.appointment.findUnique({
       where: { id },
       include: { items: { include: { service: true } } },
     });
 
-    if (!currentAppointment) {
+    if (!currentAppt) {
       throw new HTTPException(404, { message: "Cita no encontrada" });
     }
 
-    // --- LÓGICA DE RECALCULO ---
+    // Merge de datos nuevos con existentes para no perder info
+    const locationType = data.locationType || currentAppt.locationType;
+    const startsAt = data.startsAt
+      ? new Date(data.startsAt)
+      : currentAppt.startsAt;
 
-    // A. Servicios y Precios
-    let services = currentAppointment.items.map((i) => i.service);
-    let totalPrice = currentAppointment.totalPrice;
-    let durationMinutes = currentAppointment.durationMinutes;
+    // Valores específicos de Hotel
+    const duration = data.durationMinutes ?? currentAppt.durationMinutes;
+    const hasNailCut = data.hasNailCut ?? currentAppt.hasNailCut;
 
-    // Si vienen nuevos servicios, recalculamos todo desde cero
-    if (data.serviceIds) {
-      services = await prisma.service.findMany({
-        where: { id: { in: data.serviceIds }, isActive: true },
-      });
+    let durationMinutes = 0;
+    let totalPrice = 0;
+    let servicesToConnect: any[] = [];
 
-      if (services.length !== data.serviceIds.length) {
-        throw new HTTPException(400, { message: "Servicios inválidos" });
+    let massagePrice = 0;
+
+    // --- RE-CÁLCULO ---
+
+    if (locationType === "PARTICULAR") {
+      // Si no enviaron serviceIds, usamos los que ya tenía
+      const idsToUse =
+        data.serviceIds ?? currentAppt.items.map((i) => i.serviceId);
+
+      if (idsToUse.length === 0) {
+        throw new HTTPException(400, {
+          message: "Citas particulares requieren servicios.",
+        });
       }
 
-      durationMinutes = services.reduce(
+      const dbServices = await prisma.service.findMany({
+        where: { id: { in: idsToUse }, isActive: true },
+      });
+
+      durationMinutes = dbServices.reduce(
         (acc, curr) => acc + curr.durationMin,
         0
       );
-      totalPrice = services.reduce((acc, curr) => acc + curr.basePrice, 0);
+      totalPrice = dbServices.reduce((acc, curr) => acc + curr.basePrice, 0);
+      servicesToConnect = dbServices;
+    } else {
+      // Lógica Hotel Manual
+      const HOTEL_PRICES = {
+        massage: { 20: 10000, 40: 20000 },
+        nails: { yes: 5000, no: 0 },
+      };
+
+      // Recalcular precios con los valores mergeados
+      massagePrice = (HOTEL_PRICES.massage as any)[duration] || 0;
+      const nailsPrice = hasNailCut ? HOTEL_PRICES.nails.yes : 0;
+
+      totalPrice = massagePrice + nailsPrice;
+      durationMinutes = duration + (hasNailCut ? 10 : 0);
+
+      servicesToConnect = [];
     }
 
-    // B. Fechas
-    // Si viene nueva fecha, la usamos. Si no, usamos la que ya tenía.
-    const startDate = data.startsAt
-      ? new Date(data.startsAt)
-      : currentAppointment.startsAt;
+    const endsAt = new Date(startsAt.getTime() + durationMinutes * 60000);
 
-    // Calculamos el fin (Nueva Fecha + Duración (nueva o vieja))
-    const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
-
-    // C. Disponibilidad
-    // Solo verificamos si cambiaron las fechas o la duración
+    // Validar Disponibilidad solo si cambiaron tiempos y no se está cancelando
     const timeChanged =
-      data.startsAt ||
-      data.serviceIds || // Si cambian servicios, cambia la duración -> cambia el fin -> puede chocar
-      startDate.getTime() !== currentAppointment.startsAt.getTime();
+      startsAt.getTime() !== currentAppt.startsAt.getTime() ||
+      durationMinutes !== currentAppt.durationMinutes;
 
-    if (timeChanged && data.status !== "CANCELLED") {
-      await this.checkAvailability(startDate, endDate, id); // Pasamos el ID para excluirse a sí misma
+    if (
+      timeChanged &&
+      data.status !== "CANCELLED" &&
+      currentAppt.status !== "CANCELLED"
+    ) {
+      // Se pasa el 'id' para excluir la propia cita del chequeo de conflicto
+      await this.checkAvailability(startsAt, endsAt, id);
     }
 
-    // D. Splits (Ganancias)
-    // Usamos el nuevo locationType o el viejo si no cambió
-    const locationType = data.locationType || currentAppointment.locationType;
-
+    // Recalcular Splits (Misma regla de uñas 100%)
     let hotelShare = 0;
     let anamiShare = totalPrice;
 
     if (locationType === "HOTEL") {
-      hotelShare = Math.round(totalPrice * 0.4);
+      hotelShare = Math.round(massagePrice * 0.4);
       anamiShare = totalPrice - hotelShare;
     }
 
-    // --- GUARDADO EN DB ---
-
-    // Preparamos la operación de update de items (servicios)
-    // Estrategia: Si cambiaron los servicios, borramos los items viejos y creamos nuevos.
+    // Preparar operación de items (limpiar y recrear si cambiaron los servicios o el modo)
     let itemsOperation: any = undefined;
-    if (data.serviceIds) {
+
+    if (data.serviceIds || locationType !== currentAppt.locationType) {
       itemsOperation = {
-        deleteMany: {}, // Borra relaciones viejas
-        create: services.map((s) => ({
+        deleteMany: {},
+        create: servicesToConnect.map((s) => ({
           serviceId: s.id,
           priceAtTime: s.basePrice,
-        })), // Crea relaciones nuevas
+        })),
       };
     }
 
     return await prisma.appointment.update({
       where: { id },
       data: {
-        startsAt: startDate,
-        endsAt: endDate,
+        startsAt,
+        endsAt,
         durationMinutes,
         locationType,
-        status: data.status, // Actualizamos estado si viene
         totalPrice,
         anamiShare,
         hotelShare,
-        items: itemsOperation, // Actualiza la tabla intermedia
+        status: data.status,
+
+        hasNailCut,
+        facialType: null,
+
+        items: itemsOperation,
       },
       include: {
         client: { select: { fullName: true } },
@@ -261,5 +321,83 @@ export class AppointmentsService {
         client: { select: { fullName: true } },
       },
     });
+  }
+
+  async getAvailability(dateStr: string, durationMinutes: number) {
+    const startHour = 8;
+    const endHour = 23;
+    const TIMEZONE_OFFSET = 3; // Chile UTC-3
+
+    // 1. AJUSTE DE BÚSQUEDA EN BASE DE DATOS
+    // Buscamos desde las 00:00 UTC del día...
+    const searchDateStart = new Date(`${dateStr}T00:00:00.000Z`);
+
+    // ...Hasta las 23:59 UTC del DÍA SIGUIENTE (para cubrir el spill-over de horario)
+    // Esto asegura que si una cita es a las 22:00 Chile (01:00 UTC mañana), la encontremos.
+    const searchDateEnd = new Date(searchDateStart);
+    searchDateEnd.setDate(searchDateEnd.getDate() + 1); // Sumamos 1 día completo al rango
+    searchDateEnd.setUTCHours(23, 59, 59, 999);
+
+    const dayAppointments = await prisma.appointment.findMany({
+      where: {
+        status: { not: "CANCELLED" },
+        // Buscamos en un rango ampliado de 48 horas para no fallar nunca
+        startsAt: {
+          gte: searchDateStart,
+          lte: searchDateEnd,
+        },
+      },
+      select: { startsAt: true, endsAt: true },
+    });
+
+    const availableSlots: string[] = [];
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const now = new Date();
+    const bufferTime = 0;
+
+    for (let h = startHour; h < endHour; h++) {
+      for (let m = 0; m < 60; m += 10) {
+        // Construimos el Slot en UTC (+3 horas)
+        const slotStartUTC = new Date(
+          Date.UTC(year, month - 1, day, h + TIMEZONE_OFFSET, m, 0)
+        );
+        const slotEndUTC = new Date(
+          slotStartUTC.getTime() + durationMinutes * 60000
+        );
+
+        // 1. VALIDACIÓN: ¿Ya pasó?
+        if (slotStartUTC.getTime() < now.getTime() + bufferTime) {
+          continue;
+        }
+
+        // 2. VALIDACIÓN: ¿Cierre local?
+        const localEndHour = h + Math.floor((m + durationMinutes) / 60);
+        const localEndMin = (m + durationMinutes) % 60;
+        if (
+          localEndHour > endHour ||
+          (localEndHour === endHour && localEndMin > 0)
+        ) {
+          continue;
+        }
+
+        // 3. VALIDACIÓN: ¿Choca? (Ahora dayAppointments trae TODAS las citas posibles)
+        const isConflict = dayAppointments.some((appt) => {
+          const apptStart = new Date(appt.startsAt).getTime();
+          const apptEnd = new Date(appt.endsAt).getTime();
+          const sStart = slotStartUTC.getTime();
+          const sEnd = slotEndUTC.getTime();
+
+          return sStart < apptEnd && sEnd > apptStart;
+        });
+
+        if (!isConflict) {
+          availableSlots.push(
+            `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`
+          );
+        }
+      }
+    }
+
+    return { date: dateStr, availableSlots };
   }
 }

@@ -1,31 +1,24 @@
 import { z } from "@hono/zod-openapi";
 import { LocationType, AppointmentStatus } from "@prisma/client";
 
-// Enum para Zod (sincronizado con Prisma)
-const LocationTypeSchema = z
-  .nativeEnum(LocationType)
-  .openapi({ example: "PARTICULAR" });
-const StatusSchema = z
-  .nativeEnum(AppointmentStatus)
-  .openapi({ example: "SCHEDULED" });
+const LocationTypeSchema = z.nativeEnum(LocationType);
+const StatusSchema = z.nativeEnum(AppointmentStatus);
 
-// Input para CREAR una cita
 export const createAppointmentSchema = z.object({
-  clientId: z.string().uuid().openapi({ example: "0vic6sjo1lhksxadts6462" }),
+  // 1. CORRECCIÓN: Quitamos .uuid() para aceptar IDs antiguos del seed
+  clientId: z.string().openapi({ example: "0vic6sjo1lhksxadts6462" }),
 
-  // Recibimos fecha y hora de inicio (ISO String)
-  startsAt: z.string().datetime().openapi({ example: "2025-12-04T15:00:00Z" }),
+  startsAt: z.string().datetime(),
 
-  // Lista de IDs de servicios que se harán
-  serviceIds: z
-    .array(z.string().uuid())
-    .min(1)
-    .openapi({ example: ["41831bfe-bf2b-4a8f-8588-8ffd7741d3bc"] }),
+  // 2. CORRECCIÓN: Permitimos array vacío (para Modo Hotel)
+  serviceIds: z.array(z.string()).optional().default([]),
 
-  // Dónde será (Hotel o Particular)
   locationType: LocationTypeSchema.default("PARTICULAR"),
 
-  // Datos opcionales
+  // Agregamos estos campos al input para poder calcular precio Hotel en el backend
+  durationMinutes: z.number().optional(), // El frontend lo manda como 'duration' normalmente, revisaremos el controller
+  hasNailCut: z.boolean().optional(),
+
   notes: z.string().optional(),
 });
 
@@ -55,8 +48,34 @@ export const appointmentResponseSchema = z.object({
 
 export const updateAppointmentSchema = z.object({
   startsAt: z.string().datetime().optional(),
-  serviceIds: z.array(z.string().uuid()).min(1).optional(),
+  // 1. Permitimos array vacío (para Hotel) y quitamos uuid obligatorio por si acaso
+  serviceIds: z.array(z.string()).optional(),
   locationType: LocationTypeSchema.optional(),
+  status: StatusSchema.optional(),
   notes: z.string().optional(),
-  status: StatusSchema.optional(), // Permitimos cambiar estado (ej: CANCELLED)
+
+  // 2. Agregamos campos para recálculo de Hotel
+  durationMinutes: z.number().optional(),
+  hasNailCut: z.boolean().optional(),
+});
+
+// Input: Query Params para consultar disponibilidad
+export const availabilityQuerySchema = z.object({
+  date: z
+    .string()
+    .date()
+    .openapi({ example: "2025-12-05", description: "Format YYYY-MM-DD" }),
+  durationMinutes: z.coerce
+    .number()
+    .min(10)
+    .default(40)
+    .openapi({ example: 40 }),
+});
+
+// Output: Lista de horarios disponibles
+export const availabilityResponseSchema = z.object({
+  date: z.string(),
+  availableSlots: z
+    .array(z.string())
+    .openapi({ example: ["08:00", "08:10", "08:20"] }),
 });

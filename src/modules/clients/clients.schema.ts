@@ -3,10 +3,17 @@ import { z } from "@hono/zod-openapi";
 // Schema para CREAR cliente
 export const createClientSchema = z.object({
   fullName: z.string().min(2).openapi({ example: "Juan Alfaro" }),
-  email: z.string().email().optional().openapi({ example: "juan@example.com" }),
+  email: z
+    .preprocess(
+      (val) => (val === "" ? undefined : val),
+      z.string().email().optional()
+    )
+    .openapi({ example: "juan@example.com" }),
   phone: z.string().optional().openapi({ example: "+56912345678" }),
   address: z.string().optional().openapi({ example: "Av. Siempre Viva 123" }),
-  rut: z.string().optional().openapi({ example: "11.222.333-k" }),
+  rut: z
+    .preprocess((val) => (val === "" ? undefined : val), z.string().optional())
+    .openapi({ example: "11.222.333-k" }),
   notes: z
     .string()
     .optional()

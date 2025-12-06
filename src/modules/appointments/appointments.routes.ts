@@ -6,6 +6,8 @@ import {
   createAppointmentSchema,
   appointmentResponseSchema,
   updateAppointmentSchema,
+  availabilityQuerySchema,
+  availabilityResponseSchema,
 } from "./appointments.schema";
 
 // Inyección de dependencias
@@ -157,6 +159,31 @@ const deleteRoute = createRoute({
   },
 });
 
+const availabilityRoute = createRoute({
+  method: "get",
+  path: "/appointments/availability", // Ruta específica
+  tags: ["Appointments"],
+  summary: "Get available time slots",
+  description:
+    "Returns a list of 10-min interval slots where a service of X duration fits.",
+  request: {
+    query: availabilityQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Available slots",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+            data: availabilityResponseSchema,
+          }),
+        },
+      },
+    },
+  },
+});
+
 // --- EXPORTS ---
 
 export const appointmentRoutes = {
@@ -164,6 +191,7 @@ export const appointmentRoutes = {
   list: listRoute,
   update: updateRoute,
   delete: deleteRoute,
+  availability: availabilityRoute,
 };
 
 export const appointmentHandlers = {
@@ -171,4 +199,5 @@ export const appointmentHandlers = {
   list: controller.getAll,
   update: controller.update,
   delete: controller.delete,
+  availability: controller.getAvailability,
 };
