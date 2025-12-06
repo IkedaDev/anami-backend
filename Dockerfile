@@ -1,11 +1,9 @@
 # --- ETAPA 1: Dependencias ---
-# CAMBIO CRUCIAL: Usamos 'node:20-slim' en lugar de 'alpine'.
-# Esto evita el error "Illegal instruction" de QEMU al compilar para ARM64.
 FROM node:20-slim AS deps
 
 WORKDIR /app
 
-# Instalar OpenSSL (Necesario para que Prisma funcione en Debian Slim)
+# Instalar OpenSSL (Necesario para Prisma en Debian Slim)
 RUN apt-get update -y && apt-get install -y openssl
 
 # Copiamos archivos de configuración
@@ -23,17 +21,17 @@ FROM node:20-slim AS runner
 
 WORKDIR /app
 
-# También necesitamos OpenSSL en la imagen final para correr Prisma
+# Instalar OpenSSL en la imagen final
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # Copiamos las dependencias instaladas desde la etapa anterior
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copiamos el código fuente
-COPY .
+# Copiamos el código fuente (AQUÍ ESTABA EL ERROR)
+COPY . .
 
 # Variables de entorno
-ENV NODE_ENV=production
+ENV NODE_ENV=PRODUCTION
 ENV PORT=3000
 
 EXPOSE 3000
