@@ -40,7 +40,7 @@ jobs:
           tags: |
             ikedaharket/anami-backend:latest
             ikedaharket/anami-backend:${{ github.sha }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
 
       # 4. Desplegar en Raspberry Pi vía SSH
       - name: Deploy to Raspberry Pi
