@@ -323,30 +323,36 @@ export class AppointmentsService {
     });
   }
 
-  async getAvailability(dateStr: string, durationMinutes: number) {
+  async getAvailability(
+    dateStr: string,
+    durationMinutes: number,
+    excludeId?: string
+  ) {
     const startHour = 8;
     const endHour = 23;
-    const TIMEZONE_OFFSET = 3; // Chile UTC-3
+    const TIMEZONE_OFFSET = 3;
 
-    // 1. AJUSTE DE BÚSQUEDA EN BASE DE DATOS
-    // Buscamos desde las 00:00 UTC del día...
     const searchDateStart = new Date(`${dateStr}T00:00:00.000Z`);
-
-    // ...Hasta las 23:59 UTC del DÍA SIGUIENTE (para cubrir el spill-over de horario)
-    // Esto asegura que si una cita es a las 22:00 Chile (01:00 UTC mañana), la encontremos.
     const searchDateEnd = new Date(searchDateStart);
-    searchDateEnd.setDate(searchDateEnd.getDate() + 1); // Sumamos 1 día completo al rango
+    searchDateEnd.setDate(searchDateEnd.getDate() + 1);
     searchDateEnd.setUTCHours(23, 59, 59, 999);
 
-    const dayAppointments = await prisma.appointment.findMany({
-      where: {
-        status: { not: "CANCELLED" },
-        // Buscamos en un rango ampliado de 48 horas para no fallar nunca
-        startsAt: {
-          gte: searchDateStart,
-          lte: searchDateEnd,
-        },
+    // 👇 CONDICIÓN DE EXCLUSIÓN
+    const whereClause: any = {
+      status: { not: "CANCELLED" },
+      startsAt: {
+        gte: searchDateStart,
+        lte: searchDateEnd,
       },
+    };
+
+    // Si nos pasan un ID para excluir (edición), le decimos a Prisma que NO lo traiga
+    if (excludeId) {
+      whereClause.id = { not: excludeId };
+    }
+
+    const dayAppointments = await prisma.appointment.findMany({
+      where: whereClause, // Usamos el objeto dinámico
       select: { startsAt: true, endsAt: true },
     });
 

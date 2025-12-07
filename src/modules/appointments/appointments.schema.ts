@@ -70,6 +70,10 @@ export const availabilityQuerySchema = z.object({
     .min(10)
     .default(40)
     .openapi({ example: 40 }),
+  excludeId: z
+    .string()
+    .optional()
+    .openapi({ description: "ID de la cita a ignorar (para edición)" }),
 });
 
 // Output: Lista de horarios disponibles

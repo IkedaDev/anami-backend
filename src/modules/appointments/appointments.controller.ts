@@ -71,11 +71,16 @@ export class AppointmentsController {
   };
 
   getAvailability = async (c: Context) => {
-    // Validamos query params
     const query = await c.req.valid("query" as never);
-    const { date, durationMinutes } = query;
+    // 👇 Extraemos excludeId
+    const { date, durationMinutes, excludeId } = query;
 
-    const result = await this.service.getAvailability(date, durationMinutes);
+    // 👇 Lo pasamos al servicio
+    const result = await this.service.getAvailability(
+      date,
+      durationMinutes,
+      excludeId
+    );
     return ApiResponse.success(c, result);
   };
 }
