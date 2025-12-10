@@ -24,7 +24,7 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      # 2. Configurar Buildx (Necesario para compilar ARM64 en GitHub)
+      # 2. Configurar Buildx (Necesario para compilar ARM64 en GitHub )
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
