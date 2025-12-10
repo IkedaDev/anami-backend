@@ -12,7 +12,18 @@ const publicPath = process.env.API_PUBLIC_PATH || "";
 app.use(
   "/*",
   cors({
-    origin: "*",
+    origin: (origin, c) => {
+      const whitelist = [
+        "https://anami.ikedadev.com", // Tu Web Producción
+        "http://localhost:4321", // Tu Web Local (Astro)
+      ];
+      if (!origin) return "*";
+
+      if (whitelist.includes(origin)) {
+        return origin;
+      }
+      return null;
+    },
     allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     exposeHeaders: ["Content-Length"],
