@@ -157,12 +157,12 @@ export class AppointmentsService {
     const skip = (page - 1) * limit;
 
     // Ejecutamos en paralelo: Count + Find
-    const [total, appointments] = await prisma.$transaction([
+    const [total, appointments] = await Promise.all([
       prisma.appointment.count({ where: whereClause }),
       prisma.appointment.findMany({
         where: whereClause,
-        skip, // Saltar
-        take: limit, // Tomar
+        skip,
+        take: limit,
         orderBy: { startsAt: "asc" },
         include: {
           client: { select: { fullName: true } },
