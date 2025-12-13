@@ -80,7 +80,7 @@ export class AppointmentsService {
         nails: { yes: 5000, no: 0 },
       };
 
-      const duration = data.durationMinutes || 20;
+      const duration = data.durationMinutes ?? 20;
 
       massagePrice = (HOTEL_PRICES.massage as any)[duration] || 0;
       const nailsPrice = data.hasNailCut ? HOTEL_PRICES.nails.yes : 0;
