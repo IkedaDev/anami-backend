@@ -15,6 +15,7 @@ app.use(
     origin: (origin, c) => {
       const whitelist = [
         "https://anami.ikedadev.com", // Tu Web Producción
+        "https://temucomasajes.cl", // Tu Web Producción
         "http://localhost:4321", // Tu Web Local (Astro)
       ];
       if (!origin) return "*";
