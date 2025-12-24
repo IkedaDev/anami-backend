@@ -163,7 +163,7 @@ export class AppointmentsService {
         where: whereClause,
         skip,
         take: limit,
-        orderBy: { startsAt: "asc" },
+        orderBy: { startsAt: "desc" },
         include: {
           client: { select: { fullName: true } },
           items: { include: { service: { select: { name: true } } } },
