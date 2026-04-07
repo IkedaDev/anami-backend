@@ -15,7 +15,7 @@ export class AppointmentsService {
   private async checkAvailability(
     start: Date,
     end: Date,
-    excludeAppointmentId?: string
+    excludeAppointmentId?: string,
   ) {
     const conflict = await prisma.appointment.findFirst({
       where: {
@@ -70,7 +70,7 @@ export class AppointmentsService {
 
       durationMinutes = services.reduce(
         (acc, curr) => acc + curr.durationMin,
-        0
+        0,
       );
       totalPrice = services.reduce((acc, curr) => acc + curr.basePrice, 0);
     } else {
@@ -220,7 +220,7 @@ export class AppointmentsService {
 
       durationMinutes = dbServices.reduce(
         (acc, curr) => acc + curr.durationMin,
-        0
+        0,
       );
       totalPrice = dbServices.reduce((acc, curr) => acc + curr.basePrice, 0);
       servicesToConnect = dbServices;
@@ -326,18 +326,16 @@ export class AppointmentsService {
   async getAvailability(
     dateStr: string,
     durationMinutes: number,
-    excludeId?: string
+    excludeId?: string,
   ) {
     const startHour = 8;
     const endHour = 23;
-    const TIMEZONE_OFFSET = 3;
 
+    // 1. Definir el rango de búsqueda en UTC para traer las citas de la DB
+    // Usamos el día completo de 00:00 a 23:59:59
     const searchDateStart = new Date(`${dateStr}T00:00:00.000Z`);
-    const searchDateEnd = new Date(searchDateStart);
-    searchDateEnd.setDate(searchDateEnd.getDate() + 1);
-    searchDateEnd.setUTCHours(23, 59, 59, 999);
+    const searchDateEnd = new Date(`${dateStr}T23:59:59.999Z`);
 
-    // 👇 CONDICIÓN DE EXCLUSIÓN
     const whereClause: any = {
       status: { not: "CANCELLED" },
       startsAt: {
@@ -346,60 +344,57 @@ export class AppointmentsService {
       },
     };
 
-    // Si nos pasan un ID para excluir (edición), le decimos a Prisma que NO lo traiga
     if (excludeId) {
       whereClause.id = { not: excludeId };
     }
 
+    // Traemos las citas existentes para validar choques
     const dayAppointments = await prisma.appointment.findMany({
-      where: whereClause, // Usamos el objeto dinámico
+      where: whereClause,
       select: { startsAt: true, endsAt: true },
     });
 
     const availableSlots: string[] = [];
-    const [year, month, day] = dateStr.split("-").map(Number);
     const now = new Date();
-    const bufferTime = 0;
 
+    // 2. Generar slots cada 10 minutos
     for (let h = startHour; h < endHour; h++) {
       for (let m = 0; m < 60; m += 10) {
-        // Construimos el Slot en UTC (+3 horas)
-        const slotStartUTC = new Date(
-          Date.UTC(year, month - 1, day, h + TIMEZONE_OFFSET, m, 0)
-        );
-        const slotEndUTC = new Date(
-          slotStartUTC.getTime() + durationMinutes * 60000
-        );
+        const timeStr = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
 
-        // 1. VALIDACIÓN: ¿Ya pasó?
-        if (slotStartUTC.getTime() < now.getTime() + bufferTime) {
+        /**
+         * CORRECCIÓN DE ZONA HORARIA:
+         * Creamos el objeto Date interpretando el string como hora LOCAL de Santiago.
+         * Si el contenedor Docker tiene TZ=America/Santiago, new Date("YYYY-MM-DDTHH:mm")
+         * lo convertirá al UTC correcto automáticamente (sea -03 o -04).
+         */
+        const slotStart = new Date(`${dateStr}T${timeStr}:00`);
+        const slotEnd = new Date(slotStart.getTime() + durationMinutes * 60000);
+
+        // VALIDACIÓN A: ¿El slot ya pasó? (Para no agendar en el pasado)
+        if (slotStart.getTime() < now.getTime()) {
           continue;
         }
 
-        // 2. VALIDACIÓN: ¿Cierre local?
-        const localEndHour = h + Math.floor((m + durationMinutes) / 60);
-        const localEndMin = (m + durationMinutes) % 60;
-        if (
-          localEndHour > endHour ||
-          (localEndHour === endHour && localEndMin > 0)
-        ) {
+        // VALIDACIÓN B: ¿La cita termina después del horario de cierre (23:00)?
+        const limitHour = new Date(`${dateStr}T${endHour}:00:00`);
+        if (slotEnd.getTime() > limitHour.getTime()) {
           continue;
         }
 
-        // 3. VALIDACIÓN: ¿Choca? (Ahora dayAppointments trae TODAS las citas posibles)
+        // VALIDACIÓN C: ¿Choca con alguna cita existente?
         const isConflict = dayAppointments.some((appt) => {
           const apptStart = new Date(appt.startsAt).getTime();
           const apptEnd = new Date(appt.endsAt).getTime();
-          const sStart = slotStartUTC.getTime();
-          const sEnd = slotEndUTC.getTime();
+          const sStart = slotStart.getTime();
+          const sEnd = slotEnd.getTime();
 
+          // Lógica de traslape: (Inicio1 < Fin2) Y (Fin1 > Inicio2)
           return sStart < apptEnd && sEnd > apptStart;
         });
 
         if (!isConflict) {
-          availableSlots.push(
-            `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`
-          );
+          availableSlots.push(timeStr);
         }
       }
     }
