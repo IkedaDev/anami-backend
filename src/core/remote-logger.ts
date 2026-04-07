@@ -22,7 +22,6 @@ export const sendRemoteLog = (payload: LogPayload) => {
   }
 
   // No usamos 'await' para no bloquear la respuesta al usuario (Non-blocking)
-  console.log(url);
   fetch(url, {
     method: "POST",
     headers: {

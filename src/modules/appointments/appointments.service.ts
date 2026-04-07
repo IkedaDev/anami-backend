@@ -331,8 +331,8 @@ export class AppointmentsService {
     const startHour = 8;
     const endHour = 23;
 
-    // 1. Definir el rango de búsqueda en UTC para traer las citas de la DB
-    // Usamos el día completo de 00:00 a 23:59:59
+    // 1. Definir el rango de búsqueda para traer las citas de la DB
+    // Buscamos desde el inicio hasta el fin del día en UTC
     const searchDateStart = new Date(`${dateStr}T00:00:00.000Z`);
     const searchDateEnd = new Date(`${dateStr}T23:59:59.999Z`);
 
@@ -344,11 +344,11 @@ export class AppointmentsService {
       },
     };
 
+    // Si estamos editando, excluimos la cita actual del chequeo de colisiones
     if (excludeId) {
       whereClause.id = { not: excludeId };
     }
 
-    // Traemos las citas existentes para validar choques
     const dayAppointments = await prisma.appointment.findMany({
       where: whereClause,
       select: { startsAt: true, endsAt: true },
@@ -362,17 +362,12 @@ export class AppointmentsService {
       for (let m = 0; m < 60; m += 10) {
         const timeStr = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
 
-        /**
-         * CORRECCIÓN DE ZONA HORARIA:
-         * Creamos el objeto Date interpretando el string como hora LOCAL de Santiago.
-         * Si el contenedor Docker tiene TZ=America/Santiago, new Date("YYYY-MM-DDTHH:mm")
-         * lo convertirá al UTC correcto automáticamente (sea -03 o -04).
-         */
         const slotStart = new Date(`${dateStr}T${timeStr}:00`);
         const slotEnd = new Date(slotStart.getTime() + durationMinutes * 60000);
 
-        // VALIDACIÓN A: ¿El slot ya pasó? (Para no agendar en el pasado)
-        if (slotStart.getTime() < now.getTime()) {
+        // VALIDACIÓN A: ¿El slot ya pasó?
+        // Solo bloqueamos el pasado si NO estamos editando (cuando excludeId es undefined)
+        if (!excludeId && slotStart.getTime() < now.getTime()) {
           continue;
         }
 

@@ -24,7 +24,7 @@ describe("Anami Backend - Appointments Module", () => {
 
     if (!service)
       throw new Error(
-        '❌ NO SE ENCONTRÓ EL SERVICIO. Ejecuta "yarn prisma db seed" primero.'
+        '❌ NO SE ENCONTRÓ EL SERVICIO. Ejecuta "yarn prisma db seed" primero.',
       );
 
     testServiceId = service.id;
@@ -32,7 +32,7 @@ describe("Anami Backend - Appointments Module", () => {
     testServiceDuration = service.durationMin;
 
     console.log(
-      `✅ Test Environment: Usando servicio "${service.name}" (ID: ${testServiceId})`
+      `✅ Test Environment: Usando servicio "${service.name}" (ID: ${testServiceId})`,
     );
   });
 
@@ -93,7 +93,7 @@ describe("Anami Backend - Appointments Module", () => {
     expect(body.data.durationMinutes).toBe(testServiceDuration);
     // Calcular fin esperado
     const expectedEnd = new Date(
-      startsAt.getTime() + testServiceDuration * 60000
+      startsAt.getTime() + testServiceDuration * 60000,
     ).toISOString();
     expect(body.data.endsAt).toBe(expectedEnd);
   });
@@ -236,7 +236,7 @@ describe("Anami Backend - Appointments Module", () => {
       });
 
       console.log(
-        `🚧 Cita Obstáculo Creada: ${baseStart.toISOString()} - ${baseEnd.toISOString()}`
+        `🚧 Cita Obstáculo Creada: ${baseStart.toISOString()} - ${baseEnd.toISOString()}`,
       );
     });
 
