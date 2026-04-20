@@ -17,10 +17,14 @@ ENV TZ="America/Santiago"
 ENV NODE_ENV=production
 ENV PORT=3000
 
+# Copiamos las dependencias
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
+# NUEVO: Copiar el archivo de configuración de Prisma 7
+COPY --from=builder /app/prisma.config.* ./  # Copia prisma.config.ts o .js
+
 EXPOSE 3000
-CMD ["node", "dist/index.js"] # Ejecución optimizada sin tsx
+CMD ["node", "dist/index.js"]
