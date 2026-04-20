@@ -24,7 +24,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
 # NUEVO: Copiar el archivo de configuración de Prisma 7
-COPY --from=builder /app/prisma.config.* ./  # Copia prisma.config.ts o .js
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 EXPOSE 3000
 CMD ["node", "dist/index.js"]
