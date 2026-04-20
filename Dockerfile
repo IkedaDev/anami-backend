@@ -1,41 +1,26 @@
-# --- ETAPA 1: Dependencias ---
-FROM node:20-slim AS deps
-
+# --- ETAPA 1: Build ---
+FROM node:20-slim AS builder
 WORKDIR /app
-
-# Instalar OpenSSL (Necesario para Prisma en Debian Slim)
 RUN apt-get update -y && apt-get install -y openssl
-
-# Copiamos archivos de configuración
 COPY package.json yarn.lock ./
 COPY prisma ./prisma/
-
-# Instalamos dependencias
 RUN yarn install --frozen-lockfile
-
-# Generamos el cliente de Prisma
 RUN yarn prisma generate
+COPY . .
+RUN yarn build # Esto genera la carpeta /dist
 
-# --- ETAPA 2: Runner (Producción) ---
+# --- ETAPA 2: Runner ---
 FROM node:20-slim AS runner
-
 WORKDIR /app
-
-# 1. ACTUALIZACIÓN CRÍTICA: Instalamos 'tzdata' para tener las zonas horarias
 RUN apt-get update -y && apt-get install -y openssl tzdata && rm -rf /var/lib/apt/lists/*
-
-# 2. CONFIGURACIÓN GLOBAL: Forzamos la hora de Chile para todo el contenedor
 ENV TZ="America/Santiago"
-ENV NODE_ENV=PRODUCTION
+ENV NODE_ENV=production
 ENV PORT=3000
 
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+
 EXPOSE 3000
-
-# Copiamos las dependencias instaladas desde la etapa anterior
-COPY --from=deps /app/node_modules ./node_modules
-
-# Copiamos el código fuente
-COPY . .
-
-# Ejecutamos con tsx
-CMD ["npx", "tsx", "src/index.ts"]
+CMD ["node", "dist/index.js"] # Ejecución optimizada sin tsx
