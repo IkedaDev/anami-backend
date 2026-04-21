@@ -26,5 +26,9 @@ COPY --from=builder /app/prisma ./prisma
 # NUEVO: Copiar el archivo de configuración de Prisma 7
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
+RUN npm install -g tsx
+
 EXPOSE 3000
-CMD ["node", "dist/index.js"]
+
+# Ejecutamos con tsx apuntando al archivo compilado
+CMD ["tsx", "dist/index.js"]
