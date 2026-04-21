@@ -14,9 +14,10 @@ app.use(
   cors({
     origin: (origin, c) => {
       const whitelist = [
-        "https://anami.ikedadev.com", // Tu Web Producción
-        "https://temucomasajes.cl", // Tu Web Producción
-        "http://localhost:4321", // Tu Web Local (Astro)
+        "https://anami.ikedadev.com", 
+        "https://temucomasajes.cl", 
+        "https://qa.temucomasajes.cl",
+        "http://localhost:4321", 
       ];
       if (!origin) return "*";
 
