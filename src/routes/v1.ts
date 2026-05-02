@@ -73,5 +73,6 @@ v1.openapi(serviceRoutes.delete, serviceHandlers.delete);
 v1.openapi(appointmentRoutes.create, appointmentHandlers.create);
 v1.openapi(appointmentRoutes.update, appointmentHandlers.update);
 v1.openapi(appointmentRoutes.delete, appointmentHandlers.delete);
+v1.openapi(appointmentRoutes.listPaginated, appointmentHandlers.listPaginated);
 
 export default v1;

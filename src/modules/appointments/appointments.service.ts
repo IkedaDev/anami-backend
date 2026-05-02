@@ -396,4 +396,30 @@ export class AppointmentsService {
 
     return { date: dateStr, availableSlots };
   }
+
+  async findPaginated(page: number, limit: number, clientId?: string) {
+    const skip = (page - 1) * limit;
+
+    const where = clientId ? { clientId } : {};
+
+    const [total, data] = await Promise.all([
+      prisma.appointment.count({ where }),
+      prisma.appointment.findMany({
+        where,
+        include: {
+          client: {
+            select: { fullName: true, phone: true },
+          },
+          items: {
+            include: { service: { select: { name: true } } },
+          },
+        },
+        orderBy: { startsAt: "desc" },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return { data, total };
+  }
 }

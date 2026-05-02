@@ -183,12 +183,43 @@ const availabilityRoute = createRoute({
     },
   },
 });
-
+const listPaginatedRoute = createRoute({
+  method: "get",
+  path: "/appointments/paginated",
+  tags: ["Appointments"],
+  summary: "List appointments with pagination and optional filters",
+  request: {
+    query: paginationQuerySchema.extend({
+      clientId: z
+        .string()
+        .uuid()
+        .optional()
+        .openapi({ description: "Filter by Client ID" }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Paginated list of appointments",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+            message: z.string(),
+            data: z.array(appointmentResponseSchema),
+            meta: z.any(),
+            timestamp: z.string(),
+          }),
+        },
+      },
+    },
+  },
+});
 // --- EXPORTS ---
 
 export const appointmentRoutes = {
   create: createRouteDef,
   list: listRoute,
+  listPaginated: listPaginatedRoute,
   update: updateRoute,
   delete: deleteRoute,
   availability: availabilityRoute,
@@ -197,6 +228,7 @@ export const appointmentRoutes = {
 export const appointmentHandlers = {
   create: controller.create,
   list: controller.getAll,
+  listPaginated: controller.getAllPaginated,
   update: controller.update,
   delete: controller.delete,
   availability: controller.getAvailability,

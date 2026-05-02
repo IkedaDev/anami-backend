@@ -2,6 +2,7 @@ import { Context } from "hono";
 import { AppointmentsService } from "./appointments.service";
 import { ApiResponse } from "../../core/api-response";
 import { HTTPException } from "hono/http-exception";
+import { paginate } from "../../core/pagination";
 
 export class AppointmentsController {
   constructor(private service: AppointmentsService) {}
@@ -17,7 +18,7 @@ export class AppointmentsController {
         c,
         newAppointment,
         "Cita agendada exitosamente",
-        201
+        201,
       );
     } catch (error) {
       // Manejo específico de errores HTTP lanzados por el servicio (ej: 409 Conflict)
@@ -40,6 +41,26 @@ export class AppointmentsController {
 
     // Usamos el nuevo método successPaginated
     return ApiResponse.successPaginated(c, result);
+  };
+
+  getAllPaginated = async (c: Context) => {
+    // Validamos query params con el esquema de paginación
+    const { page, limit } = c.req.valid("query" as never);
+    const clientId = c.req.query("clientId");
+
+    const { data, total } = await this.service.findPaginated(
+      page,
+      limit,
+      clientId,
+    );
+
+    const result = paginate(data, total, page, limit);
+
+    return ApiResponse.successPaginated(
+      c,
+      result,
+      "Appointments retrieved successfully",
+    );
   };
 
   update = async (c: Context) => {
@@ -79,7 +100,7 @@ export class AppointmentsController {
     const result = await this.service.getAvailability(
       date,
       durationMinutes,
-      excludeId
+      excludeId,
     );
     return ApiResponse.success(c, result);
   };
