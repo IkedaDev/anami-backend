@@ -1,6 +1,7 @@
 import { Context } from "hono";
 import { ClientsService } from "./clients.service";
 import { ApiResponse } from "../../core/api-response";
+import { paginate } from "../../core/pagination";
 
 export class ClientsController {
   constructor(private service: ClientsService) {}
@@ -10,6 +11,25 @@ export class ClientsController {
     const query = c.req.query("q");
     const clients = await this.service.findAll(query);
     return ApiResponse.success(c, clients);
+  };
+
+  getAllPaginated = async (c: Context) => {
+    const { page, limit } = c.req.valid("query" as never);
+    const search = c.req.query("q");
+
+    const { data, total } = await this.service.findPaginated(
+      page,
+      limit,
+      search,
+    );
+
+    const result = paginate(data, total, page, limit);
+
+    return ApiResponse.successPaginated(
+      c,
+      result,
+      "Clients retrieved successfully",
+    );
   };
 
   getOne = async (c: Context) => {
@@ -30,7 +50,7 @@ export class ClientsController {
       c,
       newClient,
       "Client registered successfully",
-      201
+      201,
     );
   };
   update = async (c: Context) => {
@@ -43,7 +63,7 @@ export class ClientsController {
       return ApiResponse.success(
         c,
         updatedClient,
-        "Client updated successfully"
+        "Client updated successfully",
       );
     } catch (error) {
       return ApiResponse.error(c, "Client not found", null, 404);

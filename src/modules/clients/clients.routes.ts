@@ -6,6 +6,7 @@ import {
   clientResponseSchema,
   updateClientSchema,
 } from "./clients.schema";
+import { paginationQuerySchema } from "../../core/pagination";
 
 const service = new ClientsService();
 const controller = new ClientsController(service);
@@ -33,6 +34,38 @@ const listRoute = createRoute({
           schema: z.object({
             success: z.boolean(),
             data: z.array(clientResponseSchema),
+          }),
+        },
+      },
+    },
+  },
+});
+
+const listPaginatedRoute = createRoute({
+  method: "get",
+  path: "/clients/paginated",
+  tags: ["Clients"],
+  summary: "List clients with pagination and optional search",
+  request: {
+    // Extendemos el schema de paginación para aceptar también el filtro 'q'
+    query: paginationQuerySchema.extend({
+      q: z
+        .string()
+        .optional()
+        .openapi({ description: "Search query (name, rut, email)" }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Paginated list of clients",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+            message: z.string(),
+            data: z.array(clientResponseSchema),
+            meta: z.any(), // Estructura de PaginationMeta
+            timestamp: z.string(),
           }),
         },
       },
@@ -128,6 +161,7 @@ const updateRoute = createRoute({
 
 export const clientRoutes = {
   list: listRoute,
+  listPaginated: listPaginatedRoute,
   getOne: getOneRoute,
   create: createRouteDef,
   update: updateRoute,
@@ -135,6 +169,7 @@ export const clientRoutes = {
 
 export const clientHandlers = {
   list: controller.getAll,
+  listPaginated: controller.getAllPaginated,
   getOne: controller.getOne,
   create: controller.create,
   update: controller.update,

@@ -29,6 +29,32 @@ export class ClientsService {
     });
   }
 
+  async findPaginated(page: number, limit: number, query?: string) {
+    const skip = (page - 1) * limit;
+
+    const where = query
+      ? {
+          OR: [
+            { fullName: { contains: query, mode: "insensitive" as const } },
+            { rut: { contains: query, mode: "insensitive" as const } },
+            { email: { contains: query, mode: "insensitive" as const } },
+          ],
+        }
+      : {};
+
+    const [total, data] = await Promise.all([
+      prisma.client.count({ where }),
+      prisma.client.findMany({
+        where,
+        orderBy: { fullName: "asc" },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return { data, total };
+  }
+
   async findOne(id: string) {
     return await prisma.client.findUnique({
       where: { id },

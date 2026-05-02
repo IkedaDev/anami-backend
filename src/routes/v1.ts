@@ -50,7 +50,7 @@ v1.use("/auth/login", authLimiter);
 v1.openapi(authRoutes.login, authHandlers.login);
 
 v1.openapi(serviceRoutes.list, serviceHandlers.list);
-v1.openapi(serviceRoutes.listPaginated, serviceHandlers.listPaginated);
+
 v1.openapi(appointmentRoutes.list, appointmentHandlers.list);
 v1.openapi(appointmentRoutes.availability, appointmentHandlers.availability);
 
@@ -58,11 +58,13 @@ v1.use("/*", protect);
 
 // Clients
 v1.openapi(clientRoutes.list, clientHandlers.list);
+v1.openapi(clientRoutes.listPaginated, clientHandlers.listPaginated);
 v1.openapi(clientRoutes.getOne, clientHandlers.getOne);
 v1.openapi(clientRoutes.create, clientHandlers.create);
 v1.openapi(clientRoutes.update, clientHandlers.update);
 
 // Services
+v1.openapi(serviceRoutes.listPaginated, serviceHandlers.listPaginated);
 v1.openapi(serviceRoutes.create, serviceHandlers.create);
 v1.openapi(serviceRoutes.update, serviceHandlers.update);
 v1.openapi(serviceRoutes.delete, serviceHandlers.delete);
