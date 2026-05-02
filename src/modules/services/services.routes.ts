@@ -6,12 +6,44 @@ import {
   serviceResponseSchema,
   updateServiceSchema,
 } from "./services.schema";
+import { paginationQuerySchema } from "../../core/pagination";
 
 // Inyección de dependencias
 const service = new ServicesService();
 const controller = new ServicesController(service);
 
-// --- DEFINICIONES OPENAPI ---
+const listPaginatedRoute = createRoute({
+  method: "get",
+  path: "/services/paginated",
+  tags: ["Services"],
+  summary: "List all active services with pagination",
+  request: {
+    query: paginationQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Paginated list of services",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+            message: z.string(),
+            data: z.array(serviceResponseSchema),
+            meta: z.object({
+              total: z.number(),
+              page: z.number(),
+              limit: z.number(),
+              totalPages: z.number(),
+              hasNextPage: z.boolean(),
+              hasPreviousPage: z.boolean(),
+            }),
+            timestamp: z.string(),
+          }),
+        },
+      },
+    },
+  },
+});
 
 const listRoute = createRoute({
   method: "get",
@@ -96,7 +128,6 @@ const updateRoute = createRoute({
   },
 });
 
-// 4. Ruta para ELIMINAR (DELETE)
 const deleteRoute = createRoute({
   method: "delete",
   path: "/services/{id}",
@@ -129,6 +160,7 @@ const deleteRoute = createRoute({
 
 export const serviceRoutes = {
   list: listRoute,
+  listPaginated: listPaginatedRoute,
   create: createRouteDef,
   update: updateRoute,
   delete: deleteRoute,
@@ -136,6 +168,7 @@ export const serviceRoutes = {
 
 export const serviceHandlers = {
   list: controller.getAll,
+  listPaginated: controller.getPaginated,
   create: controller.create,
   update: controller.update,
   delete: controller.delete,

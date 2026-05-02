@@ -33,7 +33,7 @@ const v1 = new OpenAPIHono({
         c,
         "Error de Validación (Datos inválidos)",
         result.error,
-        400
+        400,
       );
     }
   },
@@ -50,6 +50,7 @@ v1.use("/auth/login", authLimiter);
 v1.openapi(authRoutes.login, authHandlers.login);
 
 v1.openapi(serviceRoutes.list, serviceHandlers.list);
+v1.openapi(serviceRoutes.listPaginated, serviceHandlers.listPaginated);
 v1.openapi(appointmentRoutes.list, appointmentHandlers.list);
 v1.openapi(appointmentRoutes.availability, appointmentHandlers.availability);
 
@@ -62,9 +63,9 @@ v1.openapi(clientRoutes.create, clientHandlers.create);
 v1.openapi(clientRoutes.update, clientHandlers.update);
 
 // Services
-// v1.openapi(serviceRoutes.create, serviceHandlers.create);
-// v1.openapi(serviceRoutes.update, serviceHandlers.update);
-// v1.openapi(serviceRoutes.delete, serviceHandlers.delete);
+v1.openapi(serviceRoutes.create, serviceHandlers.create);
+v1.openapi(serviceRoutes.update, serviceHandlers.update);
+v1.openapi(serviceRoutes.delete, serviceHandlers.delete);
 
 // Appointments
 v1.openapi(appointmentRoutes.create, appointmentHandlers.create);

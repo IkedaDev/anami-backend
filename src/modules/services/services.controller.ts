@@ -1,6 +1,7 @@
 import { Context } from "hono";
 import { ServicesService } from "./services.service";
 import { ApiResponse } from "../../core/api-response";
+import { paginate } from "../../core/pagination";
 
 export class ServicesController {
   constructor(private service: ServicesService) {}
@@ -8,6 +9,21 @@ export class ServicesController {
   getAll = async (c: Context) => {
     const services = await this.service.findAll();
     return ApiResponse.success(c, services);
+  };
+
+  getPaginated = async (c: Context) => {
+    const { page, limit } = c.req.valid("query" as never);
+
+    const { data, total } = await this.service.findPaginated(page, limit);
+
+    // Generamos la estructura de paginación estándar
+    const result = paginate(data, total, page, limit);
+
+    return ApiResponse.successPaginated(
+      c,
+      result,
+      "Services retrieved successfully",
+    );
   };
 
   getOne = async (c: Context) => {
@@ -21,7 +37,6 @@ export class ServicesController {
   };
 
   create = async (c: Context) => {
-    // Hono + Zod ya validaron el body aquí, así que es seguro
     const body = await c.req.valid("json" as never);
     const newItem = await this.service.create(body);
     return ApiResponse.success(c, newItem, "Service created successfully", 201);
@@ -39,7 +54,7 @@ export class ServicesController {
         c,
         "Service not found or update failed",
         null,
-        404
+        404,
       );
     }
   };
