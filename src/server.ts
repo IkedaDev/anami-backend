@@ -14,10 +14,11 @@ app.use(
   cors({
     origin: (origin, c) => {
       const whitelist = [
-        "https://anami.ikedadev.com", 
-        "https://temucomasajes.cl", 
+        "https://anami.ikedadev.com",
+        "https://temucomasajes.cl",
         "https://qa.temucomasajes.cl",
-        "http://localhost:4321", 
+        "http://localhost:4321",
+        "http://localhost:4200",
       ];
       if (!origin) return "*";
 
@@ -31,7 +32,7 @@ app.use(
     exposeHeaders: ["Content-Length"],
     maxAge: 600,
     credentials: true,
-  })
+  }),
 );
 
 app.use(logger());
@@ -63,7 +64,7 @@ app.get(
   Scalar({
     theme: "purple",
     spec: { url: `${publicPath}/doc` },
-  } as any)
+  } as any),
 );
 
 export default app;
