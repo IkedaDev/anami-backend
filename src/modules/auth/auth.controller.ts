@@ -18,4 +18,18 @@ export class AuthController {
       return ApiResponse.error(c, "Error de autenticación", error, 500);
     }
   };
+
+  renew = async (c: Context) => {
+    try {
+      const payload = c.get("jwtPayload");
+      const result = await this.service.renewToken(payload.sub);
+
+      return ApiResponse.success(c, result, "Token renovado exitosamente");
+    } catch (error) {
+      if (error instanceof HTTPException) {
+        return ApiResponse.error(c, error.message, null, error.status as any);
+      }
+      return ApiResponse.error(c, "Error al renovar sesión", error, 500);
+    }
+  };
 }

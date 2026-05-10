@@ -56,6 +56,8 @@ v1.openapi(appointmentRoutes.availability, appointmentHandlers.availability);
 
 v1.use("/*", protect);
 
+v1.openapi(authRoutes.renew, authHandlers.renew);
+
 // Clients
 v1.openapi(clientRoutes.list, clientHandlers.list);
 v1.openapi(clientRoutes.listPaginated, clientHandlers.listPaginated);

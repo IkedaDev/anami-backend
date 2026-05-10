@@ -34,6 +34,29 @@ const loginRoute = createRoute({
     401: { description: "Invalid credentials" },
   },
 });
-
-export const authRoutes = { login: loginRoute };
-export const authHandlers = { login: controller.login };
+const renewRoute = createRoute({
+  method: "get",
+  path: "/auth/renew",
+  tags: ["Auth"],
+  summary: "Renew Session Token",
+  description: "Generates a fresh JWT token using a valid existing one.",
+  responses: {
+    200: {
+      description: "Token renewed successfully",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+            data: authResponseSchema,
+          }),
+        },
+      },
+    },
+    401: { description: "Invalid or expired token" },
+  },
+});
+export const authRoutes = { login: loginRoute, renew: renewRoute };
+export const authHandlers = {
+  login: controller.login,
+  renew: controller.renew,
+};
