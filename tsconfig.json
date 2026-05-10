@@ -10,8 +10,8 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "paths": {
-      "@config/*": ["src/config/*"],
-      "@modules/auth*": ["src/modules/auth/*"]
+      "@config/*": ["./src/config/*"],
+      "@modules/auth*": ["./src/modules/auth/*"]
     },
     "verbatimModuleSyntax": false,
     "forceConsistentCasingInFileNames": true,
