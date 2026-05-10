@@ -2,7 +2,7 @@
 FROM node:20-slim AS builder
 WORKDIR /app
 RUN apt-get update -y && apt-get install -y openssl
-COPY package.json yarn.lock tsconfig.json ./
+COPY package.json yarn.lock ./
 COPY prisma ./prisma/
 RUN yarn install --frozen-lockfile
 RUN yarn prisma generate
@@ -21,7 +21,6 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/tsconfig.json ./
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 RUN npm install -g tsx
