@@ -19,7 +19,10 @@ import {
   appointmentHandlers,
 } from "../modules/appointments/appointments.routes";
 import { protect } from "../middlewares/auth.middleware";
-import { authRoutes, authHandlers } from "../modules/auth/auth.routes";
+import {
+  authRoutes,
+  authHandlers,
+} from "../modules/auth/presentation/auth.routes";
 import {
   authLimiter,
   generalLimiter,

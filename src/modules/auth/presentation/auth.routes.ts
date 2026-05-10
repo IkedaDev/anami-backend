@@ -1,7 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { AuthController } from "./auth.controller";
-import { AuthService } from "./auth.service";
-import { loginSchema, authResponseSchema } from "./auth.schema";
+import { AuthService } from "../auth.service";
+import { loginSchema, authResponseSchema } from "../domain/dto/auth.schema";
 
 const service = new AuthService();
 const controller = new AuthController(service);

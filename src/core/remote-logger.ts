@@ -1,3 +1,4 @@
+import { Envs } from "@config/env";
 import "dotenv/config";
 
 interface LogPayload {
@@ -8,12 +9,12 @@ interface LogPayload {
 }
 
 export const sendRemoteLog = (payload: LogPayload) => {
-  const url = process.env.LOGGER_SERVICE_URL;
-  const apiKey = process.env.LOGGER_API_KEY;
+  const url = Envs.LOGGER_SERVICE_URL;
+  const apiKey = Envs.LOGGER_API_KEY;
 
   // Mapeamos NODE_ENV a los valores que espera tu ilogger
   // (DEVELOPMENT, STAGING, PRODUCTION)
-  const rawEnv = process.env.NODE_ENV || "development";
+  const rawEnv = Envs.NODE_ENV || "development";
   const environment = rawEnv.toUpperCase();
 
   if (!url || !apiKey) {

@@ -1,6 +1,7 @@
 import { createMiddleware } from "hono/factory";
 import { verify } from "hono/jwt";
 import { ApiResponse } from "../core/api-response";
+import { Envs } from "@config/env";
 
 export const protect = createMiddleware(async (c, next) => {
   const authHeader = c.req.header("Authorization");
@@ -10,11 +11,10 @@ export const protect = createMiddleware(async (c, next) => {
   }
 
   const token = authHeader.split(" ")[1];
-  const secret = process.env.JWT_SECRET || "secret_dev";
+  const secret = Envs.JWT_SECRET || "secret_dev";
 
   try {
     const payload = await verify(token, secret);
-    // Inyectamos el usuario en el contexto por si lo necesitamos luego
     c.set("jwtPayload", payload);
     await next();
   } catch (error) {

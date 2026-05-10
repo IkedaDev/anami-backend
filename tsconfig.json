@@ -11,7 +11,10 @@
     /* Rutas y Directorios */
     "outDir": "./dist",
     "rootDir": "./src",
-
+    "paths": {
+      "@config/*": ["./src/config/*"],
+      "@modules/auth*": ["./src/modules/auth/*"]
+    },
     /* Configuración para evitar el error que tienes */
     "verbatimModuleSyntax": false,
     "forceConsistentCasingInFileNames": true,

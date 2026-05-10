@@ -1,6 +1,6 @@
 import { Context } from "hono";
-import { AuthService } from "./auth.service";
-import { ApiResponse } from "../../core/api-response";
+import { AuthService } from "../auth.service";
+import { ApiResponse } from "../../../core/api-response";
 import { HTTPException } from "hono/http-exception";
 
 export class AuthController {

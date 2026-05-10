@@ -5,9 +5,10 @@ import { logger } from "hono/logger";
 import { Scalar } from "@scalar/hono-api-reference";
 import v1 from "./routes/v1";
 import { httpLogger } from "./middlewares/http-logger.middleware";
+import { Envs } from "@config/env";
 
 const app = new OpenAPIHono();
-const publicPath = process.env.API_PUBLIC_PATH || "";
+const publicPath = Envs.API_PUBLIC_PATH || "";
 
 app.use(
   "/*",
