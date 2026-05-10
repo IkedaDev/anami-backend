@@ -2,7 +2,7 @@
 FROM node:20-slim AS builder
 WORKDIR /app
 RUN apt-get update -y && apt-get install -y openssl
-COPY package.json yarn.lock ./
+COPY package.json yarn.lock tsconfig.json ./
 COPY prisma ./prisma/
 RUN yarn install --frozen-lockfile
 RUN yarn prisma generate
