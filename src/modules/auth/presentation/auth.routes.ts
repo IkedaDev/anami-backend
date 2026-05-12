@@ -58,6 +58,6 @@ const renewRoute = createProtectedRoute({
 });
 export const authRoutes = { login: loginRoute, renew: renewRoute };
 export const authHandlers = {
-  login: (c: Context) => controller.login(c),
-  renew: (c: Context) => controller.renew(c),
+  login: (c: Context) => controller.login(c) as any,
+  renew: (c: Context) => controller.renew(c) as any,
 };

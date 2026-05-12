@@ -168,9 +168,9 @@ export const clientRoutes = {
 };
 
 export const clientHandlers = {
-  findBy: (c: Context) => controller.findBy(c),
-  findOne: (c: Context) => controller.findOne(c),
-  create: (c: Context) => controller.create(c),
-  update: (c: Context) => controller.update(c),
-  delete: (c: Context) => controller.delete(c),
+  findBy: (c: Context) => controller.findBy(c) as any,
+  findOne: (c: Context) => controller.findOne(c) as any,
+  create: (c: Context) => controller.create(c) as any,
+  update: (c: Context) => controller.update(c) as any,
+  delete: (c: Context) => controller.delete(c) as any,
 };
