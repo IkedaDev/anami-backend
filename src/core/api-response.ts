@@ -1,6 +1,7 @@
 import { Context } from "hono";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { PaginationMeta } from "./pagination";
+import { z } from "@hono/zod-openapi";
 
 interface IApiResponse<T> {
   success: boolean;
@@ -19,7 +20,7 @@ export class ApiResponse {
     c: Context,
     data: T,
     message: string = "Success",
-    status: S = 200 as S
+    status: S = 200 as S,
   ) {
     return c.json(
       {
@@ -28,7 +29,7 @@ export class ApiResponse {
         data,
         timestamp: new Date().toISOString(),
       } as IApiResponse<T>,
-      status
+      status,
     );
   }
 
@@ -36,7 +37,7 @@ export class ApiResponse {
     c: Context,
     paginatedData: { data: T; meta: PaginationMeta },
     message: string = "Success",
-    status: S = 200 as S
+    status: S = 200 as S,
   ) {
     return c.json(
       {
@@ -46,7 +47,7 @@ export class ApiResponse {
         meta: paginatedData.meta,
         timestamp: new Date().toISOString(),
       } as IPaginatedApiResponse<T>,
-      status
+      status,
     );
   }
 
@@ -54,10 +55,8 @@ export class ApiResponse {
     c: Context,
     message: string,
     errors: any = null,
-    status: S = 400 as S
+    status: S = 400 as S,
   ) {
-    // 1. GUARDAR DETALLES PARA EL LOGGER
-    // Esto no se envía al usuario, se queda en memoria para el middleware
     c.set("failureDetails", {
       errorMessage: message,
       errorTrace: errors, // Aquí va el ZodError o el Stack Trace
@@ -71,7 +70,45 @@ export class ApiResponse {
         data: errors,
         timestamp: new Date().toISOString(),
       } as any,
-      status
+      status,
     );
   }
 }
+
+export const createSuccessSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    success: z.boolean().openapi({ example: true }),
+    message: z.string().openapi({ example: "Operation successful" }),
+    data: dataSchema,
+    timestamp: z.string().openapi({ example: new Date().toISOString() }),
+  });
+
+export const createPaginatedSuccessSchema = <T extends z.ZodTypeAny>(
+  dataSchema: T,
+) =>
+  z.object({
+    success: z.boolean().openapi({ example: true }),
+    message: z.string().openapi({ example: "Datos recuperados con éxito" }),
+    data: z.array(dataSchema),
+    meta: paginationMetaSchema,
+    timestamp: z.string(),
+  });
+
+export const paginationMetaSchema = z.object({
+  total: z.number().openapi({ example: 100 }),
+  page: z.number().openapi({ example: 1 }),
+  limit: z.number().openapi({ example: 10 }),
+  totalPages: z.number().openapi({ example: 10 }),
+  hasNextPage: z.boolean().openapi({ example: true }),
+  hasPreviousPage: z.boolean().openapi({ example: false }),
+});
+
+export const errorResponseSchema = z.object({
+  success: z.boolean().openapi({ example: false }),
+  message: z.string().openapi({ example: "Descripción del error" }),
+  data: z
+    .any()
+    .nullable()
+    .openapi({ description: "Detalles técnicos o de validación" }),
+  timestamp: z.string(),
+});

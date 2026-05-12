@@ -6,18 +6,21 @@ import { clientResponseSchema } from "../domain/dto/clients.schema";
 import { createClientSchema } from "../domain/dto/create-request.dto";
 import { updateClientSchema } from "../domain/dto/update-request.dto";
 import { findByRequestSchema } from "../domain/dto/find-by-request.dto";
+import {
+  createPaginatedSuccessSchema,
+  createSuccessSchema,
+  errorResponseSchema,
+} from "@core/api-response";
+import { createProtectedRoute } from "@core/openapi-helper";
 
 const service = new ClientsService();
 const controller = new ClientsController(service);
 
-// --- RUTAS ---
-
-const findBy = createRoute({
+const findBy = createProtectedRoute({
   method: "post",
   path: "/clients/paginated",
   tags: ["Clients"],
-  security: [{ BearerAuth: [] }],
-  summary: "List clients with pagination and optional search",
+  summary: "List clients with pagination",
   request: {
     query: paginationQuerySchema,
     body: {
@@ -33,76 +36,72 @@ const findBy = createRoute({
       description: "Paginated list of clients",
       content: {
         "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-            data: z.array(clientResponseSchema),
-            meta: z.any(), // Estructura de PaginationMeta
-            timestamp: z.string(),
-          }),
+          // SOLUCIONADO: Ahora documentamos la meta real y el envoltorio completo
+          schema: createPaginatedSuccessSchema(clientResponseSchema),
         },
       },
     },
   },
 });
 
-const findOne = createRoute({
+const findOne = createProtectedRoute({
   method: "get",
   path: "/clients/{id}",
-  security: [{ BearerAuth: [] }],
   tags: ["Clients"],
   summary: "Get client details",
   request: {
-    params: z.object({ id: z.string() }),
+    params: z.object({
+      id: z.string().openapi({
+        example: "0vic6sjo1lhksxadts6462",
+        description: "Client unique ID",
+      }),
+    }),
   },
   responses: {
     200: {
-      description: "Client details",
+      description: "Client details found",
       content: {
         "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            data: clientResponseSchema,
-          }),
+          schema: createSuccessSchema(clientResponseSchema),
         },
       },
     },
-    404: { description: "Not found" },
+    404: {
+      description: "Client not found",
+      content: { "application/json": { schema: errorResponseSchema } },
+    },
   },
 });
 
-const createRouteDef = createRoute({
+const createRouteDef = createProtectedRoute({
   method: "post",
   path: "/clients",
-  security: [{ BearerAuth: [] }],
   tags: ["Clients"],
   summary: "Register new client",
   request: {
     body: {
-      content: {
-        "application/json": { schema: createClientSchema },
-      },
+      content: { "application/json": { schema: createClientSchema } },
     },
   },
   responses: {
     201: {
-      description: "Client created",
+      description: "Client created successfully",
       content: {
         "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            data: clientResponseSchema,
-          }),
+          schema: createSuccessSchema(clientResponseSchema),
         },
       },
+    },
+    400: {
+      description: "Validation error",
+      content: { "application/json": { schema: errorResponseSchema } },
     },
   },
 });
 
-const updateRoute = createRoute({
+const updateRoute = createProtectedRoute({
   method: "patch",
   path: "/clients/{id}",
-  security: [{ BearerAuth: [] }],
   tags: ["Clients"],
   summary: "Update client information",
   request: {
@@ -117,26 +116,23 @@ const updateRoute = createRoute({
   },
   responses: {
     200: {
-      description: "Client updated",
+      description: "Client updated successfully",
       content: {
         "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            data: clientResponseSchema,
-          }),
+          schema: createSuccessSchema(clientResponseSchema),
         },
       },
     },
-    404: {
-      description: "Client not found",
+    400: {
+      description: "Validation error",
+      content: { "application/json": { schema: errorResponseSchema } },
     },
   },
 });
 
-const deleteRoute = createRoute({
+const deleteRoute = createProtectedRoute({
   method: "delete",
   path: "/clients/{id}",
-  security: [{ BearerAuth: [] }],
   tags: ["Clients"],
   summary: "Delete client by id",
   request: {
@@ -146,18 +142,16 @@ const deleteRoute = createRoute({
   },
   responses: {
     200: {
-      description: "Is client deleted",
+      description: "Client deleted successfully",
       content: {
         "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            data: z.boolean(),
-          }),
+          schema: createSuccessSchema(z.boolean()),
         },
       },
     },
-    404: {
-      description: "Client not found",
+    400: {
+      description: "Validation error",
+      content: { "application/json": { schema: errorResponseSchema } },
     },
   },
 });
