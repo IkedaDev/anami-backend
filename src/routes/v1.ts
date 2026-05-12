@@ -67,6 +67,7 @@ v1.openapi(clientRoutes.findBy, clientHandlers.findBy);
 v1.openapi(clientRoutes.findOne, clientHandlers.findOne);
 v1.openapi(clientRoutes.create, clientHandlers.create);
 v1.openapi(clientRoutes.update, clientHandlers.update);
+v1.openapi(clientRoutes.delete, clientHandlers.delete);
 
 // Services
 v1.openapi(serviceRoutes.listPaginated, serviceHandlers.listPaginated);

@@ -133,6 +133,35 @@ const updateRoute = createRoute({
   },
 });
 
+const deleteRoute = createRoute({
+  method: "delete",
+  path: "/clients/{id}",
+  security: [{ BearerAuth: [] }],
+  tags: ["Clients"],
+  summary: "Delete client by id",
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: "0vic6sjo1lhksxadts6462" }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Is client deleted",
+      content: {
+        "application/json": {
+          schema: z.object({
+            success: z.boolean(),
+            data: z.boolean(),
+          }),
+        },
+      },
+    },
+    404: {
+      description: "Client not found",
+    },
+  },
+});
+
 // --- EXPORTS ---
 
 export const clientRoutes = {
@@ -140,6 +169,7 @@ export const clientRoutes = {
   findOne: findOne,
   create: createRouteDef,
   update: updateRoute,
+  delete: deleteRoute,
 };
 
 export const clientHandlers = {
@@ -147,4 +177,5 @@ export const clientHandlers = {
   findOne: controller.findOne,
   create: controller.create,
   update: controller.update,
+  delete: controller.delete,
 };

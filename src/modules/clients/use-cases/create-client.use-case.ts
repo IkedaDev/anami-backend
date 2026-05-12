@@ -9,8 +9,8 @@ abstract class CreateClientUseCase {
 export class CreateClient implements CreateClientUseCase {
   constructor(private readonly repository: ClientRepository) {}
 
-  async execute(clientDto: CreateClientDTO): Promise<Client> {
-    const client = await this.repository.create(clientDto);
+  execute(clientDto: CreateClientDTO): Promise<Client> {
+    const client = this.repository.create(clientDto);
     return client;
   }
 }

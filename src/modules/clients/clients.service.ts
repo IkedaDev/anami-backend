@@ -6,36 +6,14 @@ import { UpdateClientDTO } from "./domain/dto/update-request.dto";
 import { ClientMongoRepository } from "./repository/client-mongo.reposiroty";
 import { CreateClient } from "./use-cases/create-client.use-case";
 import { FindClient } from "./use-cases/find-client.use-case";
+import { UpdateClient } from "./use-cases/update-client.use-case";
+import { DeleteUser } from "./use-cases/delete-client.use-case";
 
 export class ClientsService {
-  // Buscar todos (con filtro opcional por nombre)
-
   private readonly clientRepository = new ClientMongoRepository();
 
-  async findAll(query?: string) {
-    if (!query) {
-      // Si no hay búsqueda, devolvemos los últimos 100 para no saturar
-      return await prisma.client.findMany({
-        take: 100,
-        orderBy: { fullName: "asc" },
-      });
-    }
-
-    // Búsqueda insensible a mayúsculas (Case Insensitive)
-    return await prisma.client.findMany({
-      where: {
-        OR: [
-          { fullName: { contains: query, mode: "insensitive" } },
-          { rut: { contains: query, mode: "insensitive" } },
-          { email: { contains: query, mode: "insensitive" } },
-        ],
-      },
-      orderBy: { fullName: "asc" },
-    });
-  }
-
-  async findBy(body: FindByRequestDTO) {
-    const results = await new FindClient(this.clientRepository).execute(body);
+  findBy(body: FindByRequestDTO) {
+    const results = new FindClient(this.clientRepository).execute(body);
     return results;
   }
 
@@ -52,15 +30,21 @@ export class ClientsService {
     return results.data[0];
   }
 
-  async create(data: CreateClientDTO) {
-    return await new CreateClient(this.clientRepository).execute(data);
+  create(data: CreateClientDTO) {
+    return new CreateClient(this.clientRepository).execute(data);
   }
 
-  // Nota: Dejamos el método listo aunque no expongas la ruta aún
-  async update(id: string, data: UpdateClientDTO) {
-    return await prisma.client.update({
-      where: { id },
-      data,
-    });
+  update(id: string, data: UpdateClientDTO) {
+    return new UpdateClient(this.clientRepository).execute(id, data);
+  }
+
+  async delete(id: string) {
+    const isDeleted = await new DeleteUser(this.clientRepository).execute(id);
+
+    if (!isDeleted) {
+      throw new HTTPException(404, { message: "Client not found" });
+    }
+
+    return isDeleted;
   }
 }

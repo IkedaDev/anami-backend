@@ -60,7 +60,7 @@ export class ClientMongoRepository implements ClientRepository {
   async create(req: CreateClientDTO): Promise<Client> {
     const rawClient = await prisma.client.create({
       data: {
-        fullName: req.fullName,
+        fullName: req.name,
         email: req.email,
         phone: req.phone,
         address: req.address,
@@ -85,7 +85,7 @@ export class ClientMongoRepository implements ClientRepository {
     const rawClient = await prisma.client.update({
       where: { id },
       data: {
-        fullName: req.fullName,
+        fullName: req.name,
         email: req.email,
         phone: req.phone,
         address: req.address,

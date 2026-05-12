@@ -4,7 +4,7 @@ import { z } from "@hono/zod-openapi";
 export type CreateClientDTO = z.infer<typeof createClientSchema>;
 
 export const createClientSchema = z.object({
-  fullName: z.string().min(2).openapi({ example: "Juan Alfaro" }),
+  name: z.string().min(2).openapi({ example: "Juan Alfaro" }),
   email: z
     .preprocess(
       (val) => (val === "" ? undefined : val),

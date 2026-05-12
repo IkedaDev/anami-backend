@@ -1,7 +1,6 @@
 import { Context } from "hono";
 import { ClientsService } from "../clients.service";
 import { ApiResponse } from "@core/api-response";
-import { paginate } from "@core/pagination";
 import { HTTPException } from "hono/http-exception";
 
 export class ClientsController {
@@ -45,22 +44,27 @@ export class ClientsController {
   };
 
   create = async (c: Context) => {
-    // Usamos 'as never' o 'as any' para evitar el conflicto de tipos que vimos antes
-    const body = await c.req.valid("json" as never);
-    const newClient = await this.service.create(body);
-    return ApiResponse.success(
-      c,
-      newClient,
-      "Client registered successfully",
-      201,
-    );
-  };
-  update = async (c: Context) => {
-    const id = c.req.param("id");
-    // Usamos 'as never' como preferiste para evitar conflictos de tipo
-    const body = await c.req.valid("json" as never);
-
     try {
+      const body = c.req.valid("json" as never);
+      const newClient = await this.service.create(body);
+      return ApiResponse.success(
+        c,
+        newClient,
+        "Client registered successfully",
+        201,
+      );
+    } catch (error) {
+      if (error instanceof HTTPException) {
+        return ApiResponse.error(c, error.message, null, error.status as any);
+      }
+      return ApiResponse.error(c, "Error", error, 500);
+    }
+  };
+
+  update = async (c: Context) => {
+    try {
+      const id = c.req.param("id");
+      const body = await c.req.valid("json" as never);
       const updatedClient = await this.service.update(id, body);
       return ApiResponse.success(
         c,
@@ -68,7 +72,27 @@ export class ClientsController {
         "Client updated successfully",
       );
     } catch (error) {
-      return ApiResponse.error(c, "Client not found", null, 404);
+      if (error instanceof HTTPException) {
+        return ApiResponse.error(c, error.message, null, error.status as any);
+      }
+      return ApiResponse.error(c, "Error", error, 500);
+    }
+  };
+
+  delete = async (c: Context) => {
+    try {
+      const id = c.req.param("id");
+      const deletedClient = await this.service.delete(id);
+      return ApiResponse.success(
+        c,
+        deletedClient,
+        "Client deleted successfully",
+      );
+    } catch (error) {
+      if (error instanceof HTTPException) {
+        return ApiResponse.error(c, error.message, null, error.status as any);
+      }
+      return ApiResponse.error(c, "Error", error, 500);
     }
   };
 }

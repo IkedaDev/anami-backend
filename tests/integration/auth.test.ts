@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { request } from "../helpers/integration";
 import { getOrCreateTestUser } from "../factories/user.factory";
-import { cleanupQueue } from "../setup";
 
 describe("Auth Module (Login & Renew)", () => {
   describe("POST /v1/auth/login", () => {
@@ -38,7 +37,6 @@ describe("Auth Module (Login & Renew)", () => {
 
   describe("GET /v1/auth/renew", () => {
     it("debería renovar el token si se envía un JWT válido", async () => {
-      // 1. Obtenemos un token real primero
       const { user, rawPassword } = await getOrCreateTestUser();
       const loginRes = await request("/v1/auth/login", {
         method: "POST",
@@ -47,7 +45,6 @@ describe("Auth Module (Login & Renew)", () => {
 
       const token = loginRes.body.data.token;
 
-      // 2. Intentamos el renew
       const { status, body } = await request("/v1/auth/renew", {
         method: "GET",
         headers: {
