@@ -14,10 +14,10 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.6",
+    "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "^1.1.5",
     "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^7.1.0",
-    "@scalar/hono-api-reference": "^0.9.26",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "env-var": "^7.5.0",

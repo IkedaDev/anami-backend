@@ -16,6 +16,7 @@ const findBy = createRoute({
   method: "post",
   path: "/clients/paginated",
   tags: ["Clients"],
+  security: [{ BearerAuth: [] }],
   summary: "List clients with pagination and optional search",
   request: {
     query: paginationQuerySchema,
@@ -48,6 +49,7 @@ const findBy = createRoute({
 const getOneRoute = createRoute({
   method: "get",
   path: "/clients/{id}",
+  security: [{ BearerAuth: [] }],
   tags: ["Clients"],
   summary: "Get client details",
   request: {
@@ -72,6 +74,7 @@ const getOneRoute = createRoute({
 const createRouteDef = createRoute({
   method: "post",
   path: "/clients",
+  security: [{ BearerAuth: [] }],
   tags: ["Clients"],
   summary: "Register new client",
   request: {
@@ -99,6 +102,7 @@ const createRouteDef = createRoute({
 const updateRoute = createRoute({
   method: "patch",
   path: "/clients/{id}",
+  security: [{ BearerAuth: [] }],
   tags: ["Clients"],
   summary: "Update client information",
   request: {

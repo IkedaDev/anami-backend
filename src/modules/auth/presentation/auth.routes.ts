@@ -38,6 +38,7 @@ const renewRoute = createRoute({
   method: "get",
   path: "/auth/renew",
   tags: ["Auth"],
+  security: [{ BearerAuth: [] }],
   summary: "Renew Session Token",
   description: "Generates a fresh JWT token using a valid existing one.",
   responses: {

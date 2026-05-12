@@ -2,7 +2,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import "dotenv/config";
 import { logger } from "hono/logger";
-import { Scalar } from "@scalar/hono-api-reference";
+import { swaggerUI } from "@hono/swagger-ui";
 import v1 from "./routes/v1";
 import { httpLogger } from "./middlewares/http-logger.middleware";
 import { Envs } from "@config/env";
@@ -43,14 +43,19 @@ app.use("/*", httpLogger);
 // Montamos todo el router v1 bajo el prefijo "/v1"
 app.route("/v1", v1);
 
-// --- DOCUMENTACIÓN ---
-// (Esto sigue igual, Hono detectará automáticamente el prefijo /v1 en la doc)
+app.openAPIRegistry.registerComponent("securitySchemes", "BearerAuth", {
+  type: "http",
+  scheme: "bearer",
+  bearerFormat: "JWT",
+  description: "Ingresa tu token JWT para acceder a los endpoints protegidos",
+});
+
 app.doc("/doc", {
   openapi: "3.0.0",
   info: {
     version: "1.0.0",
     title: "Anami Masoterapia API",
-    description: "Backend profesional para gestión de citas",
+    description: "Backend de Anami Masoterapia ",
   },
   servers: [
     {
@@ -61,11 +66,11 @@ app.doc("/doc", {
 });
 
 app.get(
-  "/reference",
-  Scalar({
-    theme: "purple",
-    spec: { url: `${publicPath}/doc` },
-  } as any),
+  "/docs",
+  swaggerUI({
+    url: `${publicPath}/doc`,
+  }),
 );
+app.get("", (c) => c.redirect("/docs"));
 
 export default app;

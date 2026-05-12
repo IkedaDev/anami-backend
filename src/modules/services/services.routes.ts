@@ -20,6 +20,7 @@ const listPaginatedRoute = createRoute({
   request: {
     query: paginationQuerySchema,
   },
+  security: [{ BearerAuth: [] }],
   responses: {
     200: {
       description: "Paginated list of services",
