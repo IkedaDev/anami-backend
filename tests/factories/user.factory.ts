@@ -3,12 +3,10 @@ import { hash } from "bcryptjs";
 import { cleanupQueue } from "../setup";
 
 export const getOrCreateTestUser = async (email = "admin@anami.cl") => {
-  // 1. Intentamos buscarlo primero
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return { user: existing, rawPassword: "password123" };
 
   try {
-    // 2. Intentamos la creación quirúrgica
     const hashedPassword = await hash("password123", 10);
     const newUser = await prisma.user.create({
       data: {
@@ -19,7 +17,6 @@ export const getOrCreateTestUser = async (email = "admin@anami.cl") => {
       },
     });
 
-    // Solo lo agregamos a la cola si lo creamos nosotros exitosamente
     cleanupQueue.push({ table: "user", id: newUser.id });
     return { user: newUser, rawPassword: "password123" };
   } catch (error: any) {

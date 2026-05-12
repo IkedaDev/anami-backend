@@ -8,7 +8,6 @@ describe("Clients Module", () => {
   let authToken: string;
 
   beforeAll(async () => {
-    // Obtenemos un token válido usando la factory de usuarios
     const { user, rawPassword } = await getOrCreateTestUser();
     const loginRes = await request("/v1/auth/login", {
       method: "POST",
@@ -51,7 +50,7 @@ describe("Clients Module", () => {
         {
           method: "POST",
           headers: { Authorization: `Bearer ${authToken}` },
-          body: JSON.stringify({ name: "Buscame" }), // Filtro de búsqueda
+          body: JSON.stringify({ name: "Buscame" }),
         },
       );
       expect(status).toBe(200);
