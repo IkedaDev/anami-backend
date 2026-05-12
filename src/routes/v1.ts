@@ -6,10 +6,7 @@ import {
   healthCheckRoute,
   healthHandler,
 } from "../modules/health/health.routes";
-import {
-  clientRoutes,
-  clientHandlers,
-} from "../modules/clients/clients.routes";
+
 import {
   serviceRoutes,
   serviceHandlers,
@@ -27,6 +24,10 @@ import {
   authLimiter,
   generalLimiter,
 } from "../middlewares/rate-limit.middleware";
+import {
+  clientRoutes,
+  clientHandlers,
+} from "../modules/clients/presentation/clients.routes";
 
 // Creamos una "mini-app" solo para la versión 1
 const v1 = new OpenAPIHono({
@@ -62,8 +63,7 @@ v1.use("/*", protect);
 v1.openapi(authRoutes.renew, authHandlers.renew);
 
 // Clients
-v1.openapi(clientRoutes.list, clientHandlers.list);
-v1.openapi(clientRoutes.listPaginated, clientHandlers.listPaginated);
+v1.openapi(clientRoutes.findBy, clientHandlers.findBy);
 v1.openapi(clientRoutes.getOne, clientHandlers.getOne);
 v1.openapi(clientRoutes.create, clientHandlers.create);
 v1.openapi(clientRoutes.update, clientHandlers.update);

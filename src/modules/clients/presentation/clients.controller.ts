@@ -1,29 +1,19 @@
 import { Context } from "hono";
-import { ClientsService } from "./clients.service";
-import { ApiResponse } from "../../core/api-response";
-import { paginate } from "../../core/pagination";
+import { ClientsService } from "../clients.service";
+import { ApiResponse } from "@core/api-response";
+import { paginate } from "@core/pagination";
 
 export class ClientsController {
   constructor(private service: ClientsService) {}
 
-  getAll = async (c: Context) => {
-    // Leemos el query param ?q=...
-    const query = c.req.query("q");
-    const clients = await this.service.findAll(query);
-    return ApiResponse.success(c, clients);
-  };
-
-  getAllPaginated = async (c: Context) => {
+  findBy = async (c: Context) => {
     const { page, limit } = c.req.valid("query" as never);
-    const search = c.req.query("q");
+    const body = c.req.valid("json" as never);
 
-    const { data, total } = await this.service.findPaginated(
-      page,
-      limit,
-      search,
-    );
-
-    const result = paginate(data, total, page, limit);
+    const result = await this.service.findBy({
+      pagination: { page, limit },
+      ...(body as Object),
+    });
 
     return ApiResponse.successPaginated(
       c,

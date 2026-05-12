@@ -1,59 +1,31 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { ClientsController } from "./clients.controller";
-import { ClientsService } from "./clients.service";
-import {
-  createClientSchema,
-  clientResponseSchema,
-  updateClientSchema,
-} from "./clients.schema";
-import { paginationQuerySchema } from "../../core/pagination";
+import { paginationQuerySchema } from "@core/pagination";
+import { ClientsService } from "../clients.service";
+import { clientResponseSchema } from "../domain/dto/clients.schema";
+import { createClientSchema } from "../domain/dto/create-request.dto";
+import { updateClientSchema } from "../domain/dto/update-request.dto";
+import { findByRequestSchema } from "../domain/dto/find-by-request.dto";
 
 const service = new ClientsService();
 const controller = new ClientsController(service);
 
 // --- RUTAS ---
 
-const listRoute = createRoute({
-  method: "get",
-  path: "/clients",
-  tags: ["Clients"],
-  summary: "Search or list clients",
-  request: {
-    query: z.object({
-      q: z
-        .string()
-        .optional()
-        .openapi({ description: "Search by name, rut or email" }),
-    }),
-  },
-  responses: {
-    200: {
-      description: "List of clients",
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            data: z.array(clientResponseSchema),
-          }),
-        },
-      },
-    },
-  },
-});
-
-const listPaginatedRoute = createRoute({
-  method: "get",
+const findBy = createRoute({
+  method: "post",
   path: "/clients/paginated",
   tags: ["Clients"],
   summary: "List clients with pagination and optional search",
   request: {
-    // Extendemos el schema de paginación para aceptar también el filtro 'q'
-    query: paginationQuerySchema.extend({
-      q: z
-        .string()
-        .optional()
-        .openapi({ description: "Search query (name, rut, email)" }),
-    }),
+    query: paginationQuerySchema,
+    body: {
+      content: {
+        "application/json": {
+          schema: findByRequestSchema.omit({ pagination: true }),
+        },
+      },
+    },
   },
   responses: {
     200: {
@@ -160,16 +132,14 @@ const updateRoute = createRoute({
 // --- EXPORTS ---
 
 export const clientRoutes = {
-  list: listRoute,
-  listPaginated: listPaginatedRoute,
+  findBy: findBy,
   getOne: getOneRoute,
   create: createRouteDef,
   update: updateRoute,
 };
 
 export const clientHandlers = {
-  list: controller.getAll,
-  listPaginated: controller.getAllPaginated,
+  findBy: controller.findBy,
   getOne: controller.getOne,
   create: controller.create,
   update: controller.update,

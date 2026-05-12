@@ -1,4 +1,9 @@
-// src/core/pagination.ts
+import { z } from "@hono/zod-openapi";
+
+export interface FindByResponseRepository<T> {
+  total: number;
+  data: T[];
+}
 
 export interface PaginationMeta {
   total: number;
@@ -19,7 +24,7 @@ export const paginate = <T>(
   data: T[],
   total: number,
   page: number,
-  limit: number
+  limit: number,
 ): PaginatedResult<T> => {
   const totalPages = Math.ceil(total / limit);
 
@@ -36,8 +41,7 @@ export const paginate = <T>(
   };
 };
 
-// Schema de Zod reutilizable para validar los query params de cualquier endpoint
-import { z } from "@hono/zod-openapi";
+export type PaginationRequestDto = z.infer<typeof paginationQuerySchema>;
 
 export const paginationQuerySchema = z.object({
   page: z.coerce

@@ -11,7 +11,8 @@
     "rootDir": "./src",
     "paths": {
       "@config/*": ["./src/config/*"],
-      "@modules/auth/*": ["./src/modules/auth/*"]
+      "@modules/auth/*": ["./src/modules/auth/*"],
+      "@core/*": ["./src/core/*"]
     },
     "verbatimModuleSyntax": false,
     "forceConsistentCasingInFileNames": true,

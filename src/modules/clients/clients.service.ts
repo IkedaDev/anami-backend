@@ -1,12 +1,15 @@
 import { prisma } from "../../core/prisma";
-import { z } from "zod";
-import { createClientSchema, updateClientSchema } from "./clients.schema";
-
-type CreateClientDTO = z.infer<typeof createClientSchema>;
-type UpdateClientDTO = z.infer<typeof updateClientSchema>;
+import { CreateClientDTO } from "./domain/dto/create-request.dto";
+import { FindByRequestDTO } from "./domain/dto/find-by-request.dto";
+import { UpdateClientDTO } from "./domain/dto/update-request.dto";
+import { ClientMongoRepository } from "./repository/client-mongo.reposiroty";
+import { FindClient } from "./use-cases/find-client.use-case";
 
 export class ClientsService {
   // Buscar todos (con filtro opcional por nombre)
+
+  private readonly clientRepository = new ClientMongoRepository();
+
   async findAll(query?: string) {
     if (!query) {
       // Si no hay búsqueda, devolvemos los últimos 100 para no saturar
@@ -29,30 +32,9 @@ export class ClientsService {
     });
   }
 
-  async findPaginated(page: number, limit: number, query?: string) {
-    const skip = (page - 1) * limit;
-
-    const where = query
-      ? {
-          OR: [
-            { fullName: { contains: query, mode: "insensitive" as const } },
-            { rut: { contains: query, mode: "insensitive" as const } },
-            { email: { contains: query, mode: "insensitive" as const } },
-          ],
-        }
-      : {};
-
-    const [total, data] = await Promise.all([
-      prisma.client.count({ where }),
-      prisma.client.findMany({
-        where,
-        orderBy: { fullName: "asc" },
-        skip,
-        take: limit,
-      }),
-    ]);
-
-    return { data, total };
+  async findBy(body: FindByRequestDTO) {
+    const results = await new FindClient(this.clientRepository).execute(body);
+    return results;
   }
 
   async findOne(id: string) {
