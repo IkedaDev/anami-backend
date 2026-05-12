@@ -16,7 +16,8 @@
     },
     "verbatimModuleSyntax": false,
     "forceConsistentCasingInFileNames": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]

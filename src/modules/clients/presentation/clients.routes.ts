@@ -12,6 +12,7 @@ import {
   errorResponseSchema,
 } from "@core/api-response";
 import { createProtectedRoute } from "@core/openapi-helper";
+import { Context } from "hono";
 
 const service = new ClientsService();
 const controller = new ClientsController(service);
@@ -167,9 +168,9 @@ export const clientRoutes = {
 };
 
 export const clientHandlers = {
-  findBy: controller.findBy,
-  findOne: controller.findOne,
-  create: controller.create,
-  update: controller.update,
-  delete: controller.delete,
+  findBy: (c: Context) => controller.findBy(c),
+  findOne: (c: Context) => controller.findOne(c),
+  create: (c: Context) => controller.create(c),
+  update: (c: Context) => controller.update(c),
+  delete: (c: Context) => controller.delete(c),
 };

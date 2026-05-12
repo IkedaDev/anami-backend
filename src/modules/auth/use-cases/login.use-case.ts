@@ -27,7 +27,7 @@ export class LoginUseCase implements ILoginUseCase {
     }
 
     const payload = {
-      sub: user.id,
+      id: user.id,
       role: user.role,
       name: user.name,
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7, // Expira en 7 días

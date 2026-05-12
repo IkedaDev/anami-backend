@@ -51,7 +51,6 @@ describe("Auth Module (Login & Renew)", () => {
           Authorization: `Bearer ${token}`,
         },
       });
-
       expect(status).toBe(200);
       expect(body.data).toHaveProperty("token");
       expect(body.data.user.id).toBe(user.id);

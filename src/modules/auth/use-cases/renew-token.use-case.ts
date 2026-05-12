@@ -21,7 +21,7 @@ export class RenewTokenUseCase implements IRenewTokenUseCase {
     }
 
     const payload = {
-      sub: user.id,
+      id: user.id,
       role: user.role,
       name: user.name,
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,

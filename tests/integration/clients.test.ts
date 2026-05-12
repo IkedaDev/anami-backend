@@ -54,7 +54,6 @@ describe("Clients Module", () => {
           body: JSON.stringify({ name: "Buscame" }), // Filtro de búsqueda
         },
       );
-
       expect(status).toBe(200);
       expect(Array.isArray(body.data)).toBe(true);
       expect(body.meta).toHaveProperty("total");

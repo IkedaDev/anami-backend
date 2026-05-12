@@ -1,9 +1,10 @@
-import { createRoute, z } from "@hono/zod-openapi";
+import { createRoute } from "@hono/zod-openapi";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "../auth.service";
 import { loginSchema, authResponseSchema } from "../domain/dto/auth.schema";
 import { createSuccessSchema, errorResponseSchema } from "@core/api-response";
 import { createProtectedRoute } from "@core/openapi-helper";
+import { Context } from "hono";
 
 const service = new AuthService();
 const controller = new AuthController(service);
@@ -57,6 +58,6 @@ const renewRoute = createProtectedRoute({
 });
 export const authRoutes = { login: loginRoute, renew: renewRoute };
 export const authHandlers = {
-  login: controller.login,
-  renew: controller.renew,
+  login: (c: Context) => controller.login(c),
+  renew: (c: Context) => controller.renew(c),
 };
