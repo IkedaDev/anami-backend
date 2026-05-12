@@ -64,7 +64,7 @@ v1.openapi(authRoutes.renew, authHandlers.renew);
 
 // Clients
 v1.openapi(clientRoutes.findBy, clientHandlers.findBy);
-v1.openapi(clientRoutes.getOne, clientHandlers.getOne);
+v1.openapi(clientRoutes.findOne, clientHandlers.findOne);
 v1.openapi(clientRoutes.create, clientHandlers.create);
 v1.openapi(clientRoutes.update, clientHandlers.update);
 

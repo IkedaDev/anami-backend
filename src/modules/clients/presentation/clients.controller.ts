@@ -2,34 +2,46 @@ import { Context } from "hono";
 import { ClientsService } from "../clients.service";
 import { ApiResponse } from "@core/api-response";
 import { paginate } from "@core/pagination";
+import { HTTPException } from "hono/http-exception";
 
 export class ClientsController {
   constructor(private service: ClientsService) {}
 
   findBy = async (c: Context) => {
-    const { page, limit } = c.req.valid("query" as never);
-    const body = c.req.valid("json" as never);
+    try {
+      const { page, limit } = c.req.valid("query" as never);
+      const body = c.req.valid("json" as never);
 
-    const result = await this.service.findBy({
-      pagination: { page, limit },
-      ...(body as Object),
-    });
+      const result = await this.service.findBy({
+        pagination: { page, limit },
+        ...(body as Object),
+      });
 
-    return ApiResponse.successPaginated(
-      c,
-      result,
-      "Clients retrieved successfully",
-    );
+      return ApiResponse.successPaginated(
+        c,
+        result,
+        "Clients retrieved successfully",
+      );
+    } catch (error) {
+      if (error instanceof HTTPException) {
+        return ApiResponse.error(c, error.message, null, error.status as any);
+      }
+      return ApiResponse.error(c, "Error", error, 500);
+    }
   };
 
-  getOne = async (c: Context) => {
-    const id = c.req.param("id");
-    const client = await this.service.findOne(id);
+  findOne = async (c: Context) => {
+    try {
+      const id = c.req.param("id");
+      const client = await this.service.findOne(id);
 
-    if (!client) {
-      return ApiResponse.error(c, "Client not found", null, 404);
+      return ApiResponse.success(c, client);
+    } catch (error) {
+      if (error instanceof HTTPException) {
+        return ApiResponse.error(c, error.message, null, error.status as any);
+      }
+      return ApiResponse.error(c, "Error", error, 500);
     }
-    return ApiResponse.success(c, client);
   };
 
   create = async (c: Context) => {

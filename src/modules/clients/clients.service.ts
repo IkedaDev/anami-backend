@@ -1,8 +1,10 @@
+import { HTTPException } from "hono/http-exception";
 import { prisma } from "../../core/prisma";
 import { CreateClientDTO } from "./domain/dto/create-request.dto";
 import { FindByRequestDTO } from "./domain/dto/find-by-request.dto";
 import { UpdateClientDTO } from "./domain/dto/update-request.dto";
 import { ClientMongoRepository } from "./repository/client-mongo.reposiroty";
+import { CreateClient } from "./use-cases/create-client.use-case";
 import { FindClient } from "./use-cases/find-client.use-case";
 
 export class ClientsService {
@@ -38,15 +40,20 @@ export class ClientsService {
   }
 
   async findOne(id: string) {
-    return await prisma.client.findUnique({
-      where: { id },
+    const results = await new FindClient(this.clientRepository).execute({
+      pagination: { page: 1, limit: 1 },
+      id,
     });
+
+    if (results.data.length < 1) {
+      throw new HTTPException(404, { message: "Client not found" });
+    }
+
+    return results.data[0];
   }
 
   async create(data: CreateClientDTO) {
-    return await prisma.client.create({
-      data,
-    });
+    return await new CreateClient(this.clientRepository).execute(data);
   }
 
   // Nota: Dejamos el método listo aunque no expongas la ruta aún

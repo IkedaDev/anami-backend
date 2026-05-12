@@ -46,7 +46,7 @@ const findBy = createRoute({
   },
 });
 
-const getOneRoute = createRoute({
+const findOne = createRoute({
   method: "get",
   path: "/clients/{id}",
   security: [{ BearerAuth: [] }],
@@ -137,14 +137,14 @@ const updateRoute = createRoute({
 
 export const clientRoutes = {
   findBy: findBy,
-  getOne: getOneRoute,
+  findOne: findOne,
   create: createRouteDef,
   update: updateRoute,
 };
 
 export const clientHandlers = {
   findBy: controller.findBy,
-  getOne: controller.getOne,
+  findOne: controller.findOne,
   create: controller.create,
   update: controller.update,
 };
