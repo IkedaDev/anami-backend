@@ -1,6 +1,7 @@
 import { Context } from "hono";
 import { ClientsService } from "../clients.service";
 import { APIResponse, TypeResponse } from "@core/decorators/api-response";
+import { Criteria } from "@core/criteria/criteria";
 
 export class ClientsController {
   constructor(private service: ClientsService) {}
@@ -10,13 +11,13 @@ export class ClientsController {
     type: TypeResponse.PAGINATED,
   })
   async findBy(c: Context) {
-    const { page, limit } = c.req.valid("query" as never);
-    const body = c.req.valid("json" as never);
+    const { filters, orderBy, orderType, pagination } = c.req.valid(
+      "json" as never,
+    );
 
-    return await this.service.findBy({
-      pagination: { page, limit },
-      ...(body as Object),
-    });
+    return await this.service.findBy(
+      new Criteria({ filters, pagination, orderBy, orderType }),
+    );
   }
 
   @APIResponse("Client retrieved successfully")

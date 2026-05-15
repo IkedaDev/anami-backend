@@ -42,20 +42,60 @@ describe("Clients Module", () => {
   });
 
   describe("POST /v1/clients/paginated", () => {
-    it("debería retornar una lista paginada de clientes", async () => {
+    it("debería retornar una lista paginada de clientes filtrando por nombre", async () => {
       await createTestClient({ fullName: "Buscame" });
 
-      const { status, body } = await request(
-        "/v1/clients/paginated?page=1&limit=10",
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${authToken}` },
-          body: JSON.stringify({ name: "Buscame" }),
-        },
-      );
+      const { status, body } = await request("/v1/clients/paginated", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({
+          filters: [
+            {
+              field: "name",
+              operator: "CONTAINS",
+              value: "Buscame",
+            },
+          ],
+          orderBy: "name",
+          orderType: "asc",
+        }),
+      });
+
       expect(status).toBe(200);
       expect(Array.isArray(body.data)).toBe(true);
+
+      expect(body.data.length).toBeGreaterThan(0);
+      expect(body.data[0].name).toContain("Buscame");
+
       expect(body.meta).toHaveProperty("total");
+    });
+
+    it("debería permitir búsquedas complejas con operadores OR", async () => {
+      await createTestClient({ fullName: "Juan Perez", rut: "11111111-1" });
+      await createTestClient({ fullName: "Maria Lopez", rut: "22222222-2" });
+
+      const { status, body } = await request("/v1/clients/paginated", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({
+          filters: [
+            {
+              logic: "OR",
+              filters: [
+                { field: "name", operator: "CONTAINS", value: "Juan" },
+                { field: "rut", operator: "EQUAL", value: "22222222-2" },
+              ],
+            },
+          ],
+        }),
+      });
+
+      expect(status).toBe(200);
+      expect(body.data.length).toBeGreaterThanOrEqual(2);
+
+      const names = body.data.map((c: any) => c.name);
+      expect(names).toContain("Juan Perez");
+      expect(names).toContain("Maria Lopez");
     });
   });
 

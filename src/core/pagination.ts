@@ -48,11 +48,13 @@ export const paginationQuerySchema = z.object({
     .number()
     .min(1)
     .default(1)
+    .optional()
     .openapi({ example: 1, description: "Page number" }),
   limit: z.coerce
     .number()
     .min(1)
     .max(100)
     .default(10)
+    .optional()
     .openapi({ example: 10, description: "Items per page" }),
 });

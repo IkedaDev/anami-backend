@@ -1,27 +1,28 @@
 import { HTTPException } from "hono/http-exception";
-import { prisma } from "../../core/prisma";
 import { CreateClientDTO } from "./domain/dto/create-request.dto";
-import { FindByRequestDTO } from "./domain/dto/find-by-request.dto";
 import { UpdateClientDTO } from "./domain/dto/update-request.dto";
 import { ClientMongoRepository } from "./repository/client-mongo.reposiroty";
 import { CreateClient } from "./use-cases/create-client.use-case";
 import { FindClient } from "./use-cases/find-client.use-case";
 import { UpdateClient } from "./use-cases/update-client.use-case";
 import { DeleteUser } from "./use-cases/delete-client.use-case";
+import { Criteria, FilterOperator } from "@core/criteria/criteria";
 
 export class ClientsService {
   private readonly clientRepository = new ClientMongoRepository();
 
-  findBy(body: FindByRequestDTO) {
+  findBy(body: Criteria) {
     const results = new FindClient(this.clientRepository).execute(body);
     return results;
   }
 
   async findOne(id: string) {
-    const results = await new FindClient(this.clientRepository).execute({
-      pagination: { page: 1, limit: 1 },
-      id,
-    });
+    const results = await new FindClient(this.clientRepository).execute(
+      new Criteria({
+        pagination: { page: 1, limit: 1 },
+        filters: [{ field: "id", value: id, operator: FilterOperator.EQUAL }],
+      }),
+    );
 
     if (results.data.length < 1) {
       throw new HTTPException(404, { message: "Client not found" });

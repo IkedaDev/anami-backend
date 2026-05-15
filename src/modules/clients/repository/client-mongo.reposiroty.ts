@@ -1,43 +1,39 @@
 import { FindByResponseRepository } from "@core/pagination";
 import { CreateClientDTO } from "../domain/dto/create-request.dto";
-import { FindByRequestDTO } from "../domain/dto/find-by-request.dto";
 import { UpdateClientDTO } from "../domain/dto/update-request.dto";
 import { Client } from "../domain/model/client.model";
 import { ClientRepository } from "../domain/repository/client.repository";
 import { prisma } from "@core/prisma";
+import { Criteria } from "@core/criteria/criteria";
+import { PrismaCriteriaConverter } from "@core/criteria/converters/prisma-criteria.converter";
 
 export class ClientMongoRepository implements ClientRepository {
-  async findBy(
-    req: FindByRequestDTO,
-  ): Promise<FindByResponseRepository<Client>> {
-    const { page, limit } = req.pagination;
-    const skip = (page - 1) * limit;
-    const where: any = { isActive: true };
+  async findBy(criteria: Criteria): Promise<FindByResponseRepository<Client>> {
+    const clientFieldMapping: Record<string, string> = {
+      name: "fullName",
+      email: "email",
+      rut: "rut",
+      id: "id",
+    };
 
-    if (req.id) {
-      where.id = req.id;
-    }
+    const criteriaConverter = new PrismaCriteriaConverter(clientFieldMapping);
 
-    if (req.name) {
-      where.fullName = { contains: req.name, mode: "insensitive" };
-    }
+    const queryArgs = criteriaConverter.convert(criteria);
 
-    if (req.email) {
-      where.email = { contains: req.email, mode: "insensitive" };
-    }
+    const where = {
+      ...queryArgs.where,
+      isActive: true,
+    };
 
-    if (req.rut) {
-      where.rut = { contains: req.rut, mode: "insensitive" };
+    queryArgs.where = where;
+
+    if (!queryArgs.orderBy) {
+      queryArgs.orderBy = { fullName: "asc" };
     }
 
     const [total, rawClients] = await Promise.all([
       prisma.client.count({ where }),
-      prisma.client.findMany({
-        where,
-        orderBy: { fullName: "asc" },
-        skip,
-        take: limit,
-      }),
+      prisma.client.findMany(queryArgs),
     ]);
 
     const data = rawClients.map(

@@ -1,11 +1,9 @@
-import { createRoute, z } from "@hono/zod-openapi";
+import { z } from "@hono/zod-openapi";
 import { ClientsController } from "./clients.controller";
-import { paginationQuerySchema } from "@core/pagination";
 import { ClientsService } from "../clients.service";
 import { clientResponseSchema } from "../domain/dto/clients.schema";
 import { createClientSchema } from "../domain/dto/create-request.dto";
 import { updateClientSchema } from "../domain/dto/update-request.dto";
-import { findByRequestSchema } from "../domain/dto/find-by-request.dto";
 import {
   createPaginatedSuccessSchema,
   createSuccessSchema,
@@ -13,6 +11,7 @@ import {
 } from "@core/api-response";
 import { createProtectedRoute } from "@core/openapi-helper";
 import { Context } from "hono";
+import { CriteriaRequestSchema } from "@core/criteria/schemas/criteria-request.schema";
 
 const service = new ClientsService();
 const controller = new ClientsController(service);
@@ -23,11 +22,10 @@ const findBy = createProtectedRoute({
   tags: ["Clients"],
   summary: "List clients with pagination",
   request: {
-    query: paginationQuerySchema,
     body: {
       content: {
         "application/json": {
-          schema: findByRequestSchema.omit({ pagination: true }),
+          schema: CriteriaRequestSchema,
         },
       },
     },
@@ -37,7 +35,6 @@ const findBy = createProtectedRoute({
       description: "Paginated list of clients",
       content: {
         "application/json": {
-          // SOLUCIONADO: Ahora documentamos la meta real y el envoltorio completo
           schema: createPaginatedSuccessSchema(clientResponseSchema),
         },
       },

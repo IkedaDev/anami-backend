@@ -1,22 +1,22 @@
 import { paginate, PaginatedResult } from "@core/pagination";
 import { Client } from "../domain/model/client.model";
-import { FindByRequestDTO } from "../domain/dto/find-by-request.dto";
 import { ClientRepository } from "../domain/repository/client.repository";
+import { Criteria } from "@core/criteria/criteria";
 
 abstract class FindClientUseCase {
-  abstract execute(req: FindByRequestDTO): Promise<PaginatedResult<Client>>;
+  abstract execute(req: Criteria): Promise<PaginatedResult<Client>>;
 }
 
 export class FindClient implements FindClientUseCase {
   constructor(private readonly repository: ClientRepository) {}
 
-  async execute(req: FindByRequestDTO): Promise<PaginatedResult<Client>> {
+  async execute(req: Criteria): Promise<PaginatedResult<Client>> {
     const { data, total } = await this.repository.findBy(req);
     const paginatedClients = paginate(
       data,
       total,
-      req.pagination.page,
-      req.pagination.limit,
+      req.pagination?.page || 1,
+      req.pagination?.limit || 10,
     );
     return paginatedClients;
   }
