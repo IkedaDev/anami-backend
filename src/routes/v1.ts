@@ -10,7 +10,7 @@ import {
 import {
   serviceRoutes,
   serviceHandlers,
-} from "../modules/services/services.routes";
+} from "../modules/services/presentation/services.routes";
 import {
   appointmentRoutes,
   appointmentHandlers,
@@ -53,7 +53,8 @@ v1.openapi(healthCheckRoute, healthHandler);
 v1.use("/auth/login", authLimiter);
 v1.openapi(authRoutes.login, authHandlers.login);
 
-v1.openapi(serviceRoutes.list, serviceHandlers.list);
+v1.openapi(serviceRoutes.findBy, serviceHandlers.findBy);
+v1.openapi(serviceRoutes.findOne, serviceHandlers.findOne);
 
 v1.openapi(appointmentRoutes.list, appointmentHandlers.list);
 v1.openapi(appointmentRoutes.availability, appointmentHandlers.availability);
@@ -70,7 +71,6 @@ v1.openapi(clientRoutes.update, clientHandlers.update);
 v1.openapi(clientRoutes.delete, clientHandlers.delete);
 
 // Services
-v1.openapi(serviceRoutes.listPaginated, serviceHandlers.listPaginated);
 v1.openapi(serviceRoutes.create, serviceHandlers.create);
 v1.openapi(serviceRoutes.update, serviceHandlers.update);
 v1.openapi(serviceRoutes.delete, serviceHandlers.delete);

@@ -1,13 +1,13 @@
 import { Context } from "hono";
-import { ClientsService } from "../clients.service";
+import { ServicesService } from "../services.service";
 import { APIResponse, TypeResponse } from "@core/decorators/api-response";
 import { Criteria } from "@core/criteria/criteria";
 
-export class ClientsController {
-  constructor(private service: ClientsService) {}
+export class ServicesController {
+  constructor(private service: ServicesService) {}
 
   @APIResponse({
-    message: "Clients retrieved successfully",
+    message: "Services retrieved successfully",
     type: TypeResponse.PAGINATED,
   })
   async findBy(c: Context) {
@@ -20,13 +20,13 @@ export class ClientsController {
     );
   }
 
-  @APIResponse("Client retrieved successfully")
+  @APIResponse("Service retrieved successfully")
   async findOne(c: Context) {
     const id = c.req.param("id");
     return await this.service.findOne(id!);
   }
 
-  @APIResponse({ message: "Client registered successfully", status: 201 })
+  @APIResponse({ message: "Service created successfully", status: 201 })
   async create(c: Context) {
     const body = c.req.valid("json" as never);
     return await this.service.create(body);
@@ -39,7 +39,7 @@ export class ClientsController {
     return await this.service.update(id!, body);
   }
 
-  @APIResponse("Client deleted successfully")
+  @APIResponse("Service deleted successfully")
   async delete(c: Context) {
     const id = c.req.param("id");
     return await this.service.delete(id!);

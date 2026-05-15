@@ -1,11 +1,11 @@
-import { ClientMongoRepository } from "../repository/client-mongo.reposiroty";
+import { ClientRepository } from "../domain/repository/client.repository";
 
 abstract class DeleteUserUseCase {
   abstract execute(id: string): Promise<boolean>;
 }
 
 export class DeleteUser implements DeleteUserUseCase {
-  constructor(private readonly repository: ClientMongoRepository) {}
+  constructor(private readonly repository: ClientRepository) {}
 
   execute(id: string): Promise<boolean> {
     const isDeleted = this.repository.delete(id);

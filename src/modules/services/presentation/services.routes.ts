@@ -1,26 +1,27 @@
-import { z } from "@hono/zod-openapi";
-import { ClientsController } from "./clients.controller";
-import { ClientsService } from "../clients.service";
-import { clientResponseSchema } from "../domain/dto/clients.schema";
-import { createClientSchema } from "../domain/dto/create-request.dto";
-import { updateClientSchema } from "../domain/dto/update-request.dto";
+import { createRoute, z } from "@hono/zod-openapi";
+import { ServicesService } from "../services.service";
+import { serviceResponseSchema } from "../domain/dto/services.schema";
+import { ServicesController } from "./services.controller";
+import { CriteriaRequestSchema } from "@core/criteria/schemas/criteria-request.schema";
 import {
   createPaginatedSuccessSchema,
   createSuccessSchema,
   errorResponseSchema,
 } from "@core/api-response";
 import { createProtectedRoute } from "@core/openapi-helper";
+import { createServiceSchema } from "../domain/dto/create-service.dto";
+import { updateServiceSchema } from "../domain/dto/update-service.dto";
 import { Context } from "hono";
-import { CriteriaRequestSchema } from "@core/criteria/schemas/criteria-request.schema";
 
-const service = new ClientsService();
-const controller = new ClientsController(service);
+// Inyección de dependencias
+const service = new ServicesService();
+const controller = new ServicesController(service);
 
-const findBy = createProtectedRoute({
+const findBy = createRoute({
   method: "post",
-  path: "/clients/paginated",
-  tags: ["Clients"],
-  summary: "List clients with pagination",
+  path: "/services/paginated",
+  tags: ["Services"],
+  summary: "List all active services with pagination",
   request: {
     body: {
       content: {
@@ -32,40 +33,40 @@ const findBy = createProtectedRoute({
   },
   responses: {
     200: {
-      description: "Paginated list of clients",
+      description: "Paginated list of services",
       content: {
         "application/json": {
-          schema: createPaginatedSuccessSchema(clientResponseSchema),
+          schema: createPaginatedSuccessSchema(serviceResponseSchema),
         },
       },
     },
   },
 });
 
-const findOne = createProtectedRoute({
+const findOne = createRoute({
   method: "get",
-  path: "/clients/{id}",
-  tags: ["Clients"],
-  summary: "Get client details",
+  path: "/services/{id}",
+  tags: ["Services"],
+  summary: "Get service details",
   request: {
     params: z.object({
       id: z.string().openapi({
-        example: "0vic6sjo1lhksxadts6462",
-        description: "Client unique ID",
+        example: "c5bea80a-6185-40ec-8ed2-c03c4f91030f",
+        description: "Service unique ID",
       }),
     }),
   },
   responses: {
     200: {
-      description: "Client details found",
+      description: "Service details found",
       content: {
         "application/json": {
-          schema: createSuccessSchema(clientResponseSchema),
+          schema: createSuccessSchema(serviceResponseSchema),
         },
       },
     },
     404: {
-      description: "Client not found",
+      description: "Service not found",
       content: { "application/json": { schema: errorResponseSchema } },
     },
   },
@@ -73,20 +74,20 @@ const findOne = createProtectedRoute({
 
 const create = createProtectedRoute({
   method: "post",
-  path: "/clients",
-  tags: ["Clients"],
-  summary: "Register new client",
+  path: "/services",
+  tags: ["Services"],
+  summary: "Create a new service",
   request: {
     body: {
-      content: { "application/json": { schema: createClientSchema } },
+      content: { "application/json": { schema: createServiceSchema } },
     },
   },
   responses: {
     201: {
-      description: "Client created successfully",
+      description: "Service created successfully",
       content: {
         "application/json": {
-          schema: createSuccessSchema(clientResponseSchema),
+          schema: createSuccessSchema(serviceResponseSchema),
         },
       },
     },
@@ -99,25 +100,25 @@ const create = createProtectedRoute({
 
 const update = createProtectedRoute({
   method: "patch",
-  path: "/clients/{id}",
-  tags: ["Clients"],
-  summary: "Update client information",
+  path: "/services/{id}",
+  tags: ["Services"],
+  summary: "Update a service",
   request: {
     params: z.object({
       id: z.string().openapi({ example: "0vic6sjo1lhksxadts6462" }),
     }),
     body: {
       content: {
-        "application/json": { schema: updateClientSchema },
+        "application/json": { schema: updateServiceSchema },
       },
     },
   },
   responses: {
     200: {
-      description: "Client updated successfully",
+      description: "Service updated successfully",
       content: {
         "application/json": {
-          schema: createSuccessSchema(clientResponseSchema),
+          schema: createSuccessSchema(serviceResponseSchema),
         },
       },
     },
@@ -130,9 +131,9 @@ const update = createProtectedRoute({
 
 const deleteRoute = createProtectedRoute({
   method: "delete",
-  path: "/clients/{id}",
-  tags: ["Clients"],
-  summary: "Delete client by id",
+  path: "/services/{id}",
+  tags: ["Services"],
+  summary: "Delete a service",
   request: {
     params: z.object({
       id: z.string().openapi({ example: "0vic6sjo1lhksxadts6462" }),
@@ -140,7 +141,7 @@ const deleteRoute = createProtectedRoute({
   },
   responses: {
     200: {
-      description: "Client deleted successfully",
+      description: "Service deleted successfully",
       content: {
         "application/json": {
           schema: createSuccessSchema(z.boolean()),
@@ -154,9 +155,7 @@ const deleteRoute = createProtectedRoute({
   },
 });
 
-// --- EXPORTS ---
-
-export const clientRoutes = {
+export const serviceRoutes = {
   findBy: findBy,
   findOne: findOne,
   create: create,
@@ -164,7 +163,7 @@ export const clientRoutes = {
   delete: deleteRoute,
 };
 
-export const clientHandlers = {
+export const serviceHandlers = {
   findBy: (c: Context) => controller.findBy(c) as any,
   findOne: (c: Context) => controller.findOne(c) as any,
   create: (c: Context) => controller.create(c) as any,

@@ -22,26 +22,14 @@ export class Client {
   public updatedAt: Date;
 
   constructor(props: ClientProps) {
-    const {
-      id,
-      name,
-      email,
-      phone,
-      address,
-      rut,
-      notes,
-      createdAt,
-      updatedAt,
-    } = props;
-
-    this.id = id;
-    this.name = name;
-    this.email = email;
-    this.phone = phone;
-    this.address = address;
-    this.rut = rut;
-    this.notes = notes;
-    this.createdAt = createdAt;
-    this.updatedAt = updatedAt;
+    this.id = props.id;
+    this.name = props.name;
+    this.email = props.email;
+    this.phone = props.phone;
+    this.address = props.address;
+    this.rut = props.rut;
+    this.notes = props.notes;
+    this.createdAt = props.createdAt;
+    this.updatedAt = props.updatedAt;
   }
 }

@@ -104,14 +104,10 @@ export class ClientMongoRepository implements ClientRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    try {
-      await prisma.client.update({
-        where: { id },
-        data: { isActive: false },
-      });
-      return true;
-    } catch (error) {
-      return false;
-    }
+    await prisma.client.update({
+      where: { id },
+      data: { isActive: false },
+    });
+    return true;
   }
 }

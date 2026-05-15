@@ -89,6 +89,9 @@ model Service {
 
   appointmentItems AppointmentItem[]
 
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @default(now()) @map("updated_at")
+
   @@map("services")
 }
 
