@@ -2,6 +2,7 @@ interface ServiceProps {
   id: string;
   name: string;
   description: string;
+  available: boolean;
   basePrice: number;
   durationMin: number;
   isActive: boolean;
@@ -14,6 +15,7 @@ export class Service {
   public name: string;
   public description: string;
   public basePrice: number;
+  public available: boolean;
   public durationMin: number;
   public isActive: boolean;
   public createdAt: Date;
@@ -23,6 +25,7 @@ export class Service {
     this.id = props.id;
     this.name = props.name;
     this.description = props.description;
+    this.available = props.available;
     this.basePrice = props.basePrice;
     this.durationMin = props.durationMin;
     this.isActive = props.isActive;

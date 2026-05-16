@@ -45,6 +45,7 @@ export class ServiceMongoRepository implements ServiceRepository {
           isActive: s.isActive,
           createdAt: s.createdAt,
           updatedAt: s.updatedAt,
+          available: s.available,
         }),
     );
 
@@ -71,6 +72,7 @@ export class ServiceMongoRepository implements ServiceRepository {
       isActive: rawService.isActive,
       createdAt: rawService.createdAt,
       updatedAt: rawService.updatedAt,
+      available: rawService.available,
     });
   }
   async update(id: string, req: UpdateServiceDTO): Promise<Service> {
@@ -94,6 +96,7 @@ export class ServiceMongoRepository implements ServiceRepository {
       isActive: rawService.isActive,
       createdAt: rawService.createdAt,
       updatedAt: rawService.updatedAt,
+      available: rawService.available,
     });
   }
   async delete(id: string): Promise<boolean> {

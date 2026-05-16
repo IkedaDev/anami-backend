@@ -7,4 +7,5 @@ export const serviceResponseSchema = z.object({
   basePrice: z.number(),
   durationMin: z.number(),
   isActive: z.boolean(),
+  available: z.boolean(),
 });

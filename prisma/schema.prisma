@@ -86,6 +86,7 @@ model Service {
   durationMin Int     @default(50) @map("duration_min")
   
   isActive    Boolean @default(true) @map("is_active")
+  available   Boolean @default(true)
 
   appointmentItems AppointmentItem[]
 
