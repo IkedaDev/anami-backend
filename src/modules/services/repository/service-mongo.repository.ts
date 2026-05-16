@@ -59,6 +59,7 @@ export class ServiceMongoRepository implements ServiceRepository {
         name: req.name,
         description: req.description,
         durationMin: req.durationMin,
+        available: req.available,
         isActive: req.isActive,
       },
     });
