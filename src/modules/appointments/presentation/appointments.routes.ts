@@ -1,16 +1,15 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { paginationQuerySchema } from "../../core/pagination";
+import { paginationQuerySchema } from "@core/pagination";
 import { AppointmentsController } from "./appointments.controller";
-import { AppointmentsService } from "./appointments.service";
+import { AppointmentsService } from "../appointments.service";
 import {
   createAppointmentSchema,
   appointmentResponseSchema,
   updateAppointmentSchema,
   availabilityQuerySchema,
   availabilityResponseSchema,
-} from "./appointments.schema";
+} from "../domain/dto/appointments.schema";
 
-// Inyección de dependencias
 const service = new AppointmentsService();
 const controller = new AppointmentsController(service);
 
@@ -70,7 +69,6 @@ const listRoute = createRoute({
   tags: ["Appointments"],
   summary: "List appointments (Paginated)",
   request: {
-    // Mergeamos el schema de paginación con el de fechas
     query: paginationQuerySchema.extend({
       from: z
         .string()
@@ -89,7 +87,7 @@ const listRoute = createRoute({
       description: "List of appointments",
       content: {
         "application/json": {
-          schema: paginatedAppointmentResponse, // Usamos el schema con meta
+          schema: paginatedAppointmentResponse,
         },
       },
     },
@@ -161,7 +159,7 @@ const deleteRoute = createRoute({
 
 const availabilityRoute = createRoute({
   method: "get",
-  path: "/appointments/availability", // Ruta específica
+  path: "/appointments/availability",
   tags: ["Appointments"],
   summary: "Get available time slots",
   description:
@@ -183,6 +181,7 @@ const availabilityRoute = createRoute({
     },
   },
 });
+
 const listPaginatedRoute = createRoute({
   method: "get",
   path: "/appointments/paginated",
@@ -214,6 +213,7 @@ const listPaginatedRoute = createRoute({
     },
   },
 });
+
 // --- EXPORTS ---
 
 export const appointmentRoutes = {

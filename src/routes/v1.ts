@@ -14,7 +14,7 @@ import {
 import {
   appointmentRoutes,
   appointmentHandlers,
-} from "../modules/appointments/appointments.routes";
+} from "../modules/appointments/presentation/appointments.routes";
 import { protect } from "../middlewares/auth.middleware";
 import {
   authRoutes,
