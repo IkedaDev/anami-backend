@@ -6,6 +6,7 @@ import { CreateClient } from "./use-cases/create-client.use-case";
 import { FindClient } from "./use-cases/find-client.use-case";
 import { UpdateClient } from "./use-cases/update-client.use-case";
 import { DeleteUser } from "./use-cases/delete-client.use-case";
+import { GetClientMetrics } from "./use-cases/get-client-metrics.use-case";
 import { Criteria, FilterOperator } from "@core/criteria/criteria";
 
 export class ClientsService {
@@ -48,4 +49,9 @@ export class ClientsService {
 
     return isDeleted;
   }
+
+  getMetrics() {
+    return new GetClientMetrics(this.clientRepository).execute();
+  }
 }
+

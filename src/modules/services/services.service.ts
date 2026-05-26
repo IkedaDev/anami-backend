@@ -7,6 +7,7 @@ import { CreateServiceDTO } from "./domain/dto/create-service.dto";
 import { UpdateServiceDTO } from "./domain/dto/update-service.dto";
 import { UpdateService } from "./use-cases/update-service.use-case";
 import { DeleteService } from "./use-cases/delete-service.use-case";
+import { GetServiceMetrics } from "./use-cases/get-service-metrics.use-case";
 
 export class ServicesService {
   private readonly serviceRepository = new ServiceMongoRepository();
@@ -50,4 +51,9 @@ export class ServicesService {
 
     return isDeleted;
   }
+
+  getMetrics() {
+    return new GetServiceMetrics(this.serviceRepository).execute();
+  }
 }
+

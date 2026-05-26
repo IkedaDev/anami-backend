@@ -53,6 +53,9 @@ v1.openapi(healthCheckRoute, healthHandler);
 v1.use("/auth/login", authLimiter);
 v1.openapi(authRoutes.login, authHandlers.login);
 
+v1.use("/services/metrics", protect);
+v1.openapi(serviceRoutes.metrics, serviceHandlers.metrics);
+
 v1.openapi(serviceRoutes.findBy, serviceHandlers.findBy);
 v1.openapi(serviceRoutes.findOne, serviceHandlers.findOne);
 
@@ -64,6 +67,7 @@ v1.use("/*", protect);
 v1.openapi(authRoutes.renew, authHandlers.renew);
 
 // Clients
+v1.openapi(clientRoutes.metrics, clientHandlers.metrics);
 v1.openapi(clientRoutes.findBy, clientHandlers.findBy);
 v1.openapi(clientRoutes.findOne, clientHandlers.findOne);
 v1.openapi(clientRoutes.create, clientHandlers.create);
@@ -74,6 +78,8 @@ v1.openapi(clientRoutes.delete, clientHandlers.delete);
 v1.openapi(serviceRoutes.create, serviceHandlers.create);
 v1.openapi(serviceRoutes.update, serviceHandlers.update);
 v1.openapi(serviceRoutes.delete, serviceHandlers.delete);
+
+
 
 // Appointments
 v1.openapi(appointmentRoutes.create, appointmentHandlers.create);

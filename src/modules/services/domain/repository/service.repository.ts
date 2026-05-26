@@ -9,4 +9,6 @@ export abstract class ServiceRepository {
   abstract create(req: CreateServiceDTO): Promise<Service>;
   abstract update(id: string, req: UpdateServiceDTO): Promise<Service>;
   abstract delete(id: string): Promise<boolean>;
+  abstract getMetrics(): Promise<any>;
 }
+

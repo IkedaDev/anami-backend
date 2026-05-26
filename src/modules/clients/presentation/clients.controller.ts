@@ -44,4 +44,10 @@ export class ClientsController {
     const id = c.req.param("id");
     return await this.service.delete(id!);
   }
+
+  @APIResponse("Metrics retrieved successfully")
+  async getMetrics(c: Context) {
+    return await this.service.getMetrics();
+  }
 }
+

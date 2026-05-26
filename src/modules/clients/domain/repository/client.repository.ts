@@ -9,4 +9,6 @@ export abstract class ClientRepository {
   abstract create(req: CreateClientDTO): Promise<Client>;
   abstract update(id: string, req: UpdateClientDTO): Promise<Client>;
   abstract delete(id: string): Promise<boolean>;
+  abstract getMetrics(): Promise<any>;
 }
+

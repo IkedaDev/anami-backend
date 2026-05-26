@@ -1,7 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import { ClientsController } from "./clients.controller";
 import { ClientsService } from "../clients.service";
-import { clientResponseSchema } from "../domain/dto/clients.schema";
+import { clientResponseSchema, clientMetricsResponseSchema } from "../domain/dto/clients.schema";
 import { createClientSchema } from "../domain/dto/create-request.dto";
 import { updateClientSchema } from "../domain/dto/update-request.dto";
 import {
@@ -154,9 +154,27 @@ const deleteRoute = createProtectedRoute({
   },
 });
 
+const metrics = createProtectedRoute({
+  method: "get",
+  path: "/clients/metrics",
+  tags: ["Clients"],
+  summary: "Get client metrics",
+  responses: {
+    200: {
+      description: "Client metrics details",
+      content: {
+        "application/json": {
+          schema: createSuccessSchema(clientMetricsResponseSchema),
+        },
+      },
+    },
+  },
+});
+
 // --- EXPORTS ---
 
 export const clientRoutes = {
+  metrics: metrics,
   findBy: findBy,
   findOne: findOne,
   create: create,
@@ -165,6 +183,7 @@ export const clientRoutes = {
 };
 
 export const clientHandlers = {
+  metrics: (c: Context) => controller.getMetrics(c) as any,
   findBy: (c: Context) => controller.findBy(c) as any,
   findOne: (c: Context) => controller.findOne(c) as any,
   create: (c: Context) => controller.create(c) as any,

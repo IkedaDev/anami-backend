@@ -150,4 +150,35 @@ describe("Clients Module", () => {
       expect(body.success).toBe(true);
     });
   });
+
+  describe("GET /v1/clients/metrics", () => {
+    it("debería retornar métricas de clientes con token válido", async () => {
+      const { status, body } = await request("/v1/clients/metrics", {
+        method: "GET",
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+
+      expect(status).toBe(200);
+      expect(body.success).toBe(true);
+      expect(body.data).toHaveProperty("totalClients");
+      expect(body.data).toHaveProperty("clientsWithRutCount");
+      expect(body.data).toHaveProperty("clientsWithRutPercentage");
+      expect(body.data).toHaveProperty("newClientsThisMonth");
+      expect(body.data).toHaveProperty("newClientsLastMonth");
+      expect(body.data).toHaveProperty("newClientsTrendPercentage");
+      expect(body.data).toHaveProperty("newClientsTrendDirection");
+      expect(body.data).toHaveProperty("retentionRate");
+      expect(body.data).toHaveProperty("averageLtv");
+      expect(body.data).toHaveProperty("topClients");
+      expect(Array.isArray(body.data.topClients)).toBe(true);
+    });
+
+    it("debería fallar sin token de autorización", async () => {
+      const { status } = await request("/v1/clients/metrics", {
+        method: "GET",
+      });
+      expect(status).toBe(401);
+    });
+  });
 });
+

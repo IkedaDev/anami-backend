@@ -1,6 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { ServicesService } from "../services.service";
-import { serviceResponseSchema } from "../domain/dto/services.schema";
+import { serviceResponseSchema, serviceMetricsResponseSchema } from "../domain/dto/services.schema";
 import { ServicesController } from "./services.controller";
 import { CriteriaRequestSchema } from "@core/criteria/schemas/criteria-request.schema";
 import {
@@ -155,7 +155,25 @@ const deleteRoute = createProtectedRoute({
   },
 });
 
+const metrics = createProtectedRoute({
+  method: "get",
+  path: "/services/metrics",
+  tags: ["Services"],
+  summary: "Get service metrics",
+  responses: {
+    200: {
+      description: "Service metrics details",
+      content: {
+        "application/json": {
+          schema: createSuccessSchema(serviceMetricsResponseSchema),
+        },
+      },
+    },
+  },
+});
+
 export const serviceRoutes = {
+  metrics: metrics,
   findBy: findBy,
   findOne: findOne,
   create: create,
@@ -164,6 +182,7 @@ export const serviceRoutes = {
 };
 
 export const serviceHandlers = {
+  metrics: (c: Context) => controller.getMetrics(c) as any,
   findBy: (c: Context) => controller.findBy(c) as any,
   findOne: (c: Context) => controller.findOne(c) as any,
   create: (c: Context) => controller.create(c) as any,
