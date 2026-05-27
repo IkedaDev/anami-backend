@@ -28,6 +28,11 @@ import {
   clientRoutes,
   clientHandlers,
 } from "../modules/clients/presentation/clients.routes";
+import {
+  dashboardRoutes,
+  dashboardHandlers,
+} from "../modules/dashboard/presentation/dashboard.routes";
+
 
 // Creamos una "mini-app" solo para la versión 1
 const v1 = new OpenAPIHono({
@@ -55,6 +60,9 @@ v1.openapi(authRoutes.login, authHandlers.login);
 
 v1.use("/services/metrics", protect);
 v1.openapi(serviceRoutes.metrics, serviceHandlers.metrics);
+
+v1.use("/dashboard/metrics", protect);
+v1.openapi(dashboardRoutes.metrics, dashboardHandlers.metrics);
 
 v1.openapi(serviceRoutes.findBy, serviceHandlers.findBy);
 v1.openapi(serviceRoutes.findOne, serviceHandlers.findOne);

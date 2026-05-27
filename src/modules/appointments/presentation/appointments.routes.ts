@@ -227,8 +227,8 @@ export const appointmentRoutes = {
 
 export const appointmentHandlers = {
   create: controller.create,
-  list: controller.getAll,
-  listPaginated: controller.getAllPaginated,
+  list: controller.getAll as any,
+  listPaginated: controller.getAllPaginated as any,
   update: controller.update,
   delete: controller.delete,
   availability: controller.getAvailability,

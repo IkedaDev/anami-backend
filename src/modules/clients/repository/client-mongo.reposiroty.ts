@@ -128,11 +128,11 @@ export class ClientMongoRepository implements ClientRepository {
       clientsWithPhoneCount,
     ] = await Promise.all([
       prisma.client.count({ where: { isActive: true } }),
-      prisma.client.count({ where: { isActive: true, rut: { not: null, not: "" } } }),
+      prisma.client.count({ where: { isActive: true, AND: [{ rut: { not: null } }, { rut: { not: "" } }] } }),
       prisma.client.count({ where: { isActive: true, createdAt: { gte: startOfThisMonth, lte: endOfThisMonth } } }),
       prisma.client.count({ where: { isActive: true, createdAt: { gte: startOfLastMonth, lte: endOfLastMonth } } }),
-      prisma.client.count({ where: { isActive: true, email: { not: null, not: "" } } }),
-      prisma.client.count({ where: { isActive: true, phone: { not: null, not: "" } } }),
+      prisma.client.count({ where: { isActive: true, AND: [{ email: { not: null } }, { email: { not: "" } }] } }),
+      prisma.client.count({ where: { isActive: true, AND: [{ phone: { not: null } }, { phone: { not: "" } }] } }),
     ]);
 
     // Calculate RUT percentage
